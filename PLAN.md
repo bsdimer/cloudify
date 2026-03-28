@@ -262,6 +262,101 @@ Core entities:
 - The orchestrator writes to this repo; OpenTofu plans and applies from it
 - Every resource change = Git commit → OpenTofu plan → approval (auto or manual) → apply
 
+### 4.7 Tenant IAM (Identity & Access Management)
+
+Provide AWS IAM-like capabilities so that each tenant can manage their own users,
+roles, permissions, and service accounts. This is distinct from the platform-level
+RBAC (Section 4.3), which controls ISP operator access.
+
+#### 4.7.1 Permission Model
+
+Fine-grained, resource-action permissions using a `resource:action` convention:
+
+```
+Permission format: <resource_domain>:<action>
+
+Examples:
+  compute:create         — Create VMs / K8s clusters
+  compute:delete         — Delete VMs / K8s clusters
+  compute:read           — View compute resources
+  database:create        — Create managed DB instances
+  database:read          — View DB instances and connection info
+  network:manage         — Manage SDN, firewall rules, IPs
+  storage:write          — Create/modify buckets and objects
+  iam:manage             — Manage roles, users, service accounts
+  billing:read           — View billing and usage data
+  *:*                    — Full access (wildcard)
+```
+
+Platform-level RBAC (super*admin, owner, admin, member, viewer) remains for
+the basic hierarchy. Tenant IAM adds fine-grained control \_on top* for tenants
+that need it.
+
+#### 4.7.2 Custom Roles
+
+- Tenant owners/admins can define **custom roles** with arbitrary permission sets
+- Built-in roles are seeded on tenant creation (cannot be deleted):
+  - `tenant-admin` — `*:*` (full access within tenant)
+  - `developer` — `compute:*`, `database:read`, `storage:*`, `network:read`
+  - `billing-admin` — `billing:*`, `iam:read`
+  - `read-only` — `*:read`
+- Custom roles reference a list of permission strings (stored as JSONB)
+- Roles are scoped to a single tenant
+
+#### 4.7.3 User Management (Tenant-Level)
+
+- Tenant owner/admin can invite users by email
+- Invitation flow: invite → email sent → user accepts → account created or linked
+- Assign one or more IAM roles per user (many-to-many)
+- Suspend / remove users from tenant
+- API endpoints:
+  - `POST /api/v1/iam/users/invite` — send invitation
+  - `GET /api/v1/iam/users` — list tenant users
+  - `PATCH /api/v1/iam/users/:id/roles` — assign/revoke roles
+  - `DELETE /api/v1/iam/users/:id` — remove user from tenant
+
+#### 4.7.4 Service Accounts
+
+Machine-to-machine identity for CI/CD, automation, and external integrations:
+
+- Service accounts are non-human identities scoped to a tenant
+- Each service account has a name, description, and assigned IAM roles
+- API keys are issued per service account (not per human user)
+- Service account tokens can be scoped to specific permissions
+- API endpoints:
+  - `POST /api/v1/iam/service-accounts` — create service account
+  - `GET /api/v1/iam/service-accounts` — list service accounts
+  - `POST /api/v1/iam/service-accounts/:id/keys` — issue API key
+  - `DELETE /api/v1/iam/service-accounts/:id` — delete service account
+
+#### 4.7.5 IAM Policy Evaluation
+
+- On every API request, the permission guard evaluates:
+  1. Is the user a platform-level `super_admin`? → allow (bypass)
+  2. Resolve the user's IAM roles within the tenant
+  3. Collect all permissions from assigned roles
+  4. Check if the required permission (e.g., `compute:create`) is in the set
+  5. Wildcard matching: `compute:*` grants all compute actions, `*:*` grants everything
+- API key requests: scopes on the key further restrict the role permissions (intersection)
+- JWT tokens include a `permissions` claim (cached, refreshed on role change)
+
+#### 4.7.6 IAM Audit Trail
+
+- All IAM operations emit audit events:
+  - Role created / updated / deleted
+  - User invited / role assigned / role revoked / removed
+  - Service account created / key issued / deleted
+  - Permission denied events (for security monitoring)
+- Events published to `cloudify.audit` NATS stream
+
+#### 4.7.7 Database Entities
+
+- **IamRole** — id, tenant_id, name, description, permissions (JSONB), built_in, created_at
+- **UserIamRole** — user_id, iam_role_id (junction table, many-to-many)
+- **ServiceAccount** — id, tenant_id, name, description, created_by, status, created_at
+- **ServiceAccountIamRole** — service_account_id, iam_role_id (junction)
+- **UserInvitation** — id, tenant_id, email, invited_by, iam_role_ids (JSONB), status, token, expires_at
+
 ---
 
 ## 5. Phase 1 — Core Compute & Networking

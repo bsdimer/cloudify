@@ -52,6 +52,7 @@ Cloudify sits on top of your Proxmox cluster(s) and turns them into a managed cl
 - **Managed Databases** — PostgreSQL, MongoDB, and Valkey (Redis-compatible) with automated backups, replication, and point-in-time recovery.
 - **Object Storage** — S3-compatible storage (MinIO) with bucket policies, lifecycle rules, and versioning.
 - **Software-Defined Networking** — Private networks per tenant (OVN), firewall rules, floating IPs, load balancers.
+- **IAM (Identity & Access Management)** — AWS IAM-like fine-grained permissions, custom roles, service accounts, and user invitation flow per tenant.
 - **DNS & SSL/TLS** — Managed DNS zones, automatic Let's Encrypt certificates, custom domain support.
 - **Secrets Management** — Vault-backed secrets storage for credentials and API keys.
 - **Artifact Registry** — Docker image registry with vulnerability scanning (Harbor).
@@ -111,20 +112,20 @@ Cloudify follows a **control plane / data plane** separation:
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **Backend** | NestJS (TypeScript), microservices architecture |
-| **Frontend** | React 18, Vite, Tailwind CSS, Shadcn/ui |
-| **Database** | PostgreSQL 16+ (control plane), Drizzle ORM |
-| **Cache/Queue** | Valkey (Redis-compatible) |
-| **Event Bus** | NATS JetStream |
-| **IaC** | OpenTofu (Terraform-compatible) |
-| **Git** | Gitea/Forgejo (per-tenant repos) |
-| **Secrets** | HashiCorp Vault / OpenBao |
-| **SDN** | OVN (Open Virtual Network) |
-| **Hypervisor** | Proxmox VE (VMware planned) |
-| **Monorepo** | Nx, pnpm workspaces |
-| **CI/CD** | GitHub Actions |
+| Layer           | Technology                                      |
+| --------------- | ----------------------------------------------- |
+| **Backend**     | NestJS (TypeScript), microservices architecture |
+| **Frontend**    | React 18, Vite, Tailwind CSS, Shadcn/ui         |
+| **Database**    | PostgreSQL 16+ (control plane), Drizzle ORM     |
+| **Cache/Queue** | Valkey (Redis-compatible)                       |
+| **Event Bus**   | NATS JetStream                                  |
+| **IaC**         | OpenTofu (Terraform-compatible)                 |
+| **Git**         | Gitea/Forgejo (per-tenant repos)                |
+| **Secrets**     | HashiCorp Vault / OpenBao                       |
+| **SDN**         | OVN (Open Virtual Network)                      |
+| **Hypervisor**  | Proxmox VE (VMware planned)                     |
+| **Monorepo**    | Nx, pnpm workspaces                             |
+| **CI/CD**       | GitHub Actions                                  |
 
 ## Quick Start
 
@@ -181,17 +182,17 @@ cloudify/
 
 Cloudify is being built in phases. Contributions are welcome at every stage.
 
-| Phase | Description | Status |
-|-------|-------------|--------|
-| **Phase 0** | Foundations — Auth, RBAC, API gateway, tenant model, event bus, GitOps | :construction: In Progress |
-| **Phase 1** | Core Compute & Networking — VM provisioning, managed K8s, SDN, IPAM, load balancers | :white_circle: Planned |
-| **Phase 2** | Managed Services — PostgreSQL, MongoDB, Valkey, MinIO object storage | :white_circle: Planned |
-| **Phase 3** | Platform Services — DNS, SSL/TLS certificates, secrets, artifact registry | :white_circle: Planned |
-| **Phase 4** | Web UI & Self-Service Portal — Tenant dashboard, admin panel | :white_circle: Planned |
-| **Phase 5** | Billing, Quotas & Metering — Usage tracking, invoices, payment integration | :white_circle: Planned |
-| **Phase 6** | Plugin & Extension System — Third-party managed service plugins | :white_circle: Planned |
-| **Phase 7** | Installation & Day-2 Ops — One-command installer, Helm charts, monitoring | :white_circle: Planned |
-| **Phase 8** | Hardening — HA, disaster recovery, security audit, performance tuning | :white_circle: Planned |
+| Phase       | Description                                                                         | Status                     |
+| ----------- | ----------------------------------------------------------------------------------- | -------------------------- |
+| **Phase 0** | Foundations — Auth, RBAC, API gateway, tenant model, event bus, GitOps              | :construction: In Progress |
+| **Phase 1** | Core Compute & Networking — VM provisioning, managed K8s, SDN, IPAM, load balancers | :white_circle: Planned     |
+| **Phase 2** | Managed Services — PostgreSQL, MongoDB, Valkey, MinIO object storage                | :white_circle: Planned     |
+| **Phase 3** | Platform Services — DNS, SSL/TLS certificates, secrets, artifact registry           | :white_circle: Planned     |
+| **Phase 4** | Web UI & Self-Service Portal — Tenant dashboard, admin panel                        | :white_circle: Planned     |
+| **Phase 5** | Billing, Quotas & Metering — Usage tracking, invoices, payment integration          | :white_circle: Planned     |
+| **Phase 6** | Plugin & Extension System — Third-party managed service plugins                     | :white_circle: Planned     |
+| **Phase 7** | Installation & Day-2 Ops — One-command installer, Helm charts, monitoring           | :white_circle: Planned     |
+| **Phase 8** | Hardening — HA, disaster recovery, security audit, performance tuning               | :white_circle: Planned     |
 
 See [PLAN.md](PLAN.md) for the full implementation plan with detailed specifications for each phase.
 
@@ -243,16 +244,16 @@ git push origin feat/your-feature
 
 ## Why Cloudify?
 
-| | Hyperscale Clouds (AWS/GCP) | OpenStack | **Cloudify** |
-|---|---|---|---|
-| **Target audience** | Everyone | Large enterprises | Small/mid ISPs & hosters |
-| **Infrastructure** | Their hardware | Your hardware | Your hardware |
-| **Complexity** | Managed for you | Very high | Low (Docker Compose → Helm) |
-| **Cost** | Pay per use (expensive) | Free but ops-heavy | Free & simple to operate |
-| **Multi-tenancy** | Built in | Possible but complex | Built in, isolated by default |
-| **Managed services** | Extensive | Limited | Growing (plugin-extensible) |
-| **IaC model** | Various | Heat/Terraform | GitOps (OpenTofu + Git) |
-| **Extensibility** | No | Limited | Plugin SDK for new services |
+|                      | Hyperscale Clouds (AWS/GCP) | OpenStack            | **Cloudify**                  |
+| -------------------- | --------------------------- | -------------------- | ----------------------------- |
+| **Target audience**  | Everyone                    | Large enterprises    | Small/mid ISPs & hosters      |
+| **Infrastructure**   | Their hardware              | Your hardware        | Your hardware                 |
+| **Complexity**       | Managed for you             | Very high            | Low (Docker Compose → Helm)   |
+| **Cost**             | Pay per use (expensive)     | Free but ops-heavy   | Free & simple to operate      |
+| **Multi-tenancy**    | Built in                    | Possible but complex | Built in, isolated by default |
+| **Managed services** | Extensive                   | Limited              | Growing (plugin-extensible)   |
+| **IaC model**        | Various                     | Heat/Terraform       | GitOps (OpenTofu + Git)       |
+| **Extensibility**    | No                          | Limited              | Plugin SDK for new services   |
 
 ## License
 

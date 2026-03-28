@@ -32,6 +32,7 @@ export const EVENT_STREAMS = {
   GITOPS: 'cloudify.gitops',
   AUDIT: 'cloudify.audit',
   FIREWALL: 'cloudify.firewall',
+  IAM: 'cloudify.iam',
 } as const;
 
 // ── Resource Events ──
@@ -116,4 +117,51 @@ export const EVENT_TYPES = {
   FIREWALL_RULE_CHANGED: 'firewall.rule_changed',
   WAF_EVENT: 'firewall.waf_event',
   DDOS_ALERT: 'firewall.ddos_alert',
+  // IAM
+  IAM_ROLE_CREATED: 'iam.role_created',
+  IAM_ROLE_UPDATED: 'iam.role_updated',
+  IAM_ROLE_DELETED: 'iam.role_deleted',
+  IAM_USER_INVITED: 'iam.user_invited',
+  IAM_USER_ROLE_ASSIGNED: 'iam.user_role_assigned',
+  IAM_USER_ROLE_REVOKED: 'iam.user_role_revoked',
+  IAM_USER_REMOVED: 'iam.user_removed',
+  IAM_SERVICE_ACCOUNT_CREATED: 'iam.service_account_created',
+  IAM_SERVICE_ACCOUNT_DELETED: 'iam.service_account_deleted',
+  IAM_PERMISSION_DENIED: 'iam.permission_denied',
 } as const;
+
+// ── IAM Event Payloads ──
+
+export interface IamRoleChangedPayload {
+  roleId: string;
+  roleName: string;
+  permissions: string[];
+}
+
+export interface IamUserInvitedPayload {
+  invitationId: string;
+  email: string;
+  roleIds: string[];
+  invitedBy: string;
+}
+
+export interface IamUserRoleChangedPayload {
+  userId: string;
+  roleId: string;
+  roleName: string;
+  action: 'assigned' | 'revoked';
+  changedBy: string;
+}
+
+export interface IamServiceAccountChangedPayload {
+  serviceAccountId: string;
+  name: string;
+  action: 'created' | 'deleted';
+}
+
+export interface IamPermissionDeniedPayload {
+  userId: string;
+  requiredPermission: string;
+  resource: string;
+  action: string;
+}
