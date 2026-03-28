@@ -1,10 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { HealthModule } from './health/health.module';
+import { CorrelationIdMiddleware } from './common/correlation-id.middleware';
+import { IdempotencyMiddleware } from './common/idempotency.middleware';
 
 @Module({
   imports: [
@@ -30,4 +32,9 @@ import { HealthModule } from './health/health.module';
     HealthModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CorrelationIdMiddleware).forRoutes('*');
+    consumer.apply(IdempotencyMiddleware).forRoutes('*');
+  }
+}

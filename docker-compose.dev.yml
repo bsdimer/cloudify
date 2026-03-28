@@ -45,6 +45,20 @@ services:
       postgres:
         condition: service_healthy
 
+  nats:
+    image: nats:2.10-alpine
+    command: ['--jetstream', '--store_dir', '/data', '--http_port', '8222']
+    ports:
+      - '4222:4222'
+      - '8222:8222'
+    volumes:
+      - natsdata:/data
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:8222/healthz']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   vault:
     image: hashicorp/vault:1.17
     environment:
@@ -58,4 +72,5 @@ services:
 volumes:
   pgdata:
   redisdata:
+  natsdata:
   giteadata:

@@ -13,67 +13,67 @@
 
 ### 0.1 Developer Environment
 
-- [ ] Initialize Nx monorepo (NestJS + React)
-- [ ] Configure TypeScript strict mode across all packages
-- [ ] Configure ESLint + Prettier (shared config)
-- [ ] Set up GitHub Actions CI pipeline (lint, test, build, Docker push)
+- [x] Initialize Nx monorepo (NestJS + React)
+- [x] Configure TypeScript strict mode across all packages
+- [x] Configure ESLint + Prettier (shared config)
+- [x] Set up GitHub Actions CI pipeline (lint, test, build, Docker push)
 - [ ] Conventional Commits + semantic-release
-- [ ] Create `docker-compose.dev.yml` (Postgres, Valkey, Gitea, Vault)
+- [x] Create `docker-compose.dev.yml` (Postgres, Valkey, Gitea, Vault, NATS)
 - [ ] Write contributing guide (`CONTRIBUTING.md`)
 
 ### 0.2 Control-Plane Database
 
-- [ ] Design and finalize schema (ERD)
-- [ ] Tenant entity + migrations
-- [ ] User entity + migrations
-- [ ] ApiKey entity + migrations
-- [ ] Resource entity (generic, JSONB spec, desired/actual state hashes) + migrations
-- [ ] ResourceTag entity + migrations
-- [ ] IdempotencyKey entity + migrations
-- [ ] WebhookEndpoint entity + migrations
-- [ ] WebhookDelivery entity + migrations
-- [ ] AuditLog entity (partitioned by month) + migrations
-- [ ] BillingAccount entity + migrations
-- [ ] UsageRecord entity + migrations
-- [ ] Quota entity + migrations
-- [ ] Seed data (default plans, admin user)
+- [x] Design and finalize schema (ERD)
+- [x] Tenant entity + migrations
+- [x] User entity + migrations
+- [x] ApiKey entity + migrations
+- [x] Resource entity (generic, JSONB spec, desired/actual state hashes) + migrations
+- [x] ResourceTag entity + migrations
+- [x] IdempotencyKey entity + migrations
+- [x] WebhookEndpoint entity + migrations
+- [x] WebhookDelivery entity + migrations
+- [x] AuditLog entity (with correlation_id) + migrations
+- [x] BillingAccount entity + migrations
+- [x] UsageRecord entity + migrations
+- [x] Quota entity + migrations
+- [x] Seed data (default plans, admin user)
 
 ### 0.3 Authentication & Authorization
 
-- [ ] JWT auth module (access + refresh tokens)
-- [ ] Password hashing (argon2/bcrypt)
-- [ ] RBAC guard (Owner / Admin / Member / Viewer)
-- [ ] API key authentication strategy
+- [x] JWT auth module (access + refresh tokens)
+- [x] Password hashing (argon2/bcrypt)
+- [x] RBAC guard (Owner / Admin / Member / Viewer)
+- [x] API key authentication strategy
 - [ ] Admin super-role (ISP operator) auth domain
-- [ ] Auth middleware integration with API gateway
-- [ ] Token refresh endpoint
+- [x] Auth middleware integration with API gateway
+- [x] Token refresh endpoint
 - [ ] Logout / token revocation
 
 ### 0.4 API Gateway
 
-- [ ] NestJS API gateway scaffold (`packages/api-gateway`)
-- [ ] Versioned routing (`/api/v1/...`)
-- [ ] Request validation (class-validator or Zod)
-- [ ] Rate limiting middleware (token bucket via Redis)
+- [x] NestJS API gateway scaffold (`packages/api-gateway`)
+- [x] Versioned routing (`/api/v1/...`)
+- [x] Request validation (class-validator or Zod)
+- [x] Rate limiting middleware (token bucket via Redis)
 - [ ] Request/response audit logging
-- [ ] OpenAPI / Swagger auto-generation
+- [x] OpenAPI / Swagger auto-generation
 - [ ] Auto-generate API client SDKs (TS, Python, Go) via openapi-generator in CI
-- [ ] Idempotency-Key header middleware (store + replay cached responses)
-- [ ] Request correlation ID (propagated through all services)
+- [x] Idempotency-Key header middleware (store + replay cached responses)
+- [x] Request correlation ID (propagated through all services)
 - [ ] Circuit breaker per downstream service (opossum)
 - [ ] WebSocket gateway for real-time events
-- [ ] CORS and security headers
+- [x] CORS and security headers
 
 ### 0.5 Tenant Lifecycle
 
-- [ ] `POST /api/v1/tenants` — create tenant
-- [ ] `GET /api/v1/tenants` — list tenants (admin)
-- [ ] `GET /api/v1/tenants/:id` — get tenant details
-- [ ] `PATCH /api/v1/tenants/:id` — update tenant
-- [ ] `DELETE /api/v1/tenants/:id` — decommission tenant
-- [ ] Tenant suspension / reactivation
-- [ ] Default quota assignment on creation
-- [ ] Tenant slug uniqueness validation
+- [x] `POST /api/v1/tenants` — create tenant
+- [x] `GET /api/v1/tenants` — list tenants (admin)
+- [x] `GET /api/v1/tenants/:id` — get tenant details
+- [x] `PATCH /api/v1/tenants/:id` — update tenant
+- [x] `DELETE /api/v1/tenants/:id` — decommission tenant
+- [x] Tenant suspension / reactivation
+- [x] Default quota assignment on creation
+- [x] Tenant slug uniqueness validation
 
 ### 0.6 GitOps Service — Tenant Repo Bootstrapping
 
@@ -93,10 +93,10 @@
 
 ### 0.7 Event Bus (NATS JetStream)
 
-- [ ] NATS server deployment (dev docker-compose + production cluster)
+- [x] NATS server deployment (dev docker-compose + production cluster)
 - [ ] JetStream configuration (streams, consumers, retention)
-- [ ] Standardized event envelope schema (event_id, type, tenant_id, correlation_id, payload)
-- [ ] Core event streams: `cloudify.resources.*`, `cloudify.tenants.*`, `cloudify.billing.*`, `cloudify.audit.*`
+- [x] Standardized event envelope schema (event_id, type, tenant_id, correlation_id, payload)
+- [x] Core event streams: `cloudify.resources.*`, `cloudify.tenants.*`, `cloudify.billing.*`, `cloudify.audit.*`
 - [ ] Dead letter queue configuration with retry policy
 - [ ] NestJS NATS transport integration for all services
 - [ ] Event publishing helper (type-safe, auto-envelope)
@@ -104,21 +104,21 @@
 
 ### 0.8 Hypervisor Abstraction Layer
 
-- [ ] `HypervisorProvider` interface definition (`packages/hypervisor/core`)
-- [ ] VM lifecycle methods (create, destroy, start, stop, resize, snapshot, restore, migrate)
-- [ ] Template/image management methods
-- [ ] Node pool and capacity query methods
-- [ ] PlacementStrategy interface (spread, pack, affinity)
-- [ ] StorageProvider abstraction
+- [x] `HypervisorProvider` interface definition (`packages/hypervisor/core`)
+- [x] VM lifecycle methods (create, destroy, start, stop, resize, snapshot, restore, migrate)
+- [x] Template/image management methods
+- [x] Node pool and capacity query methods
+- [x] PlacementStrategy interface (spread, pack, affinity)
+- [x] StorageProvider abstraction
 - [ ] Proxmox implementation (`packages/hypervisor/proxmox`)
 - [ ] Provider factory (config-driven selection)
 
 ### 0.9 Common Package
 
-- [ ] Shared DTOs and interfaces (`packages/common`)
+- [x] Shared DTOs and interfaces (`packages/common`)
 - [ ] Error classes and error codes
 - [ ] Pagination helpers
-- [ ] Event schemas (typed event definitions for all streams)
+- [x] Event schemas (typed event definitions for all streams)
 - [ ] Logger configuration (structured JSON with correlation ID)
 - [ ] Retry/backoff utilities
 - [ ] Idempotency key utilities
@@ -818,7 +818,7 @@
 
 | Phase | Status | Items | Done | Progress |
 |-------|--------|-------|------|----------|
-| Phase 0 — Foundations | Not started | 76 | 0 | 0% |
+| Phase 0 — Foundations | In progress | 76 | 47 | 62% |
 | Phase 1 — Compute & Networking | Not started | 55 | 0 | 0% |
 | Phase 2 — Managed Services | Not started | 44 | 0 | 0% |
 | Phase 3 — Platform Services | Not started | 52 | 0 | 0% |
@@ -837,7 +837,7 @@
 | Tenant Terraform Provider | Not started | 21 | 0 | 0% |
 | API Client SDKs | Not started | 5 | 0 | 0% |
 | CLI Tool | Not started | 13 | 0 | 0% |
-| **Total** | | **524** | **0** | **0%** |
+| **Total** | | **524** | **47** | **9%** |
 
 ---
 

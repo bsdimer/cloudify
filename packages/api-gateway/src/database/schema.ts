@@ -8,7 +8,9 @@ import {
   jsonb,
   integer,
   numeric,
+  boolean,
   index,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
 // ── Enums ──
@@ -143,6 +145,10 @@ export const resources = pgTable(
     status: resourceStatusEnum('status').notNull().default('pending'),
     spec: jsonb('spec').$type<Record<string, unknown>>().notNull().default({}),
     providerId: varchar('provider_id', { length: 255 }),
+    // Reconciliation fields (Section 17)
+    desiredStateHash: varchar('desired_state_hash', { length: 64 }),
+    actualStateHash: varchar('actual_state_hash', { length: 64 }),
+    lastReconciledAt: timestamp('last_reconciled_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .notNull()
@@ -157,6 +163,98 @@ export const resources = pgTable(
   ],
 );
 
+// ── Resource Tags (Section 20) ──
+
+export const resourceTags = pgTable(
+  'resource_tags',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    resourceId: uuid('resource_id')
+      .notNull()
+      .references(() => resources.id, { onDelete: 'cascade' }),
+    key: varchar('key', { length: 128 }).notNull(),
+    value: varchar('value', { length: 256 }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('resource_tags_resource_key_idx').on(table.resourceId, table.key),
+    index('resource_tags_key_value_idx').on(table.key, table.value),
+  ],
+);
+
+// ── Idempotency Keys (Section 23) ──
+
+export const idempotencyKeys = pgTable(
+  'idempotency_keys',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    key: varchar('key', { length: 255 }).notNull(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    method: varchar('method', { length: 10 }).notNull(),
+    path: varchar('path', { length: 1024 }).notNull(),
+    statusCode: integer('status_code'),
+    responseBody: jsonb('response_body').$type<Record<string, unknown>>(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    uniqueIndex('idempotency_keys_tenant_key_idx').on(table.tenantId, table.key),
+    index('idempotency_keys_expires_at_idx').on(table.expiresAt),
+  ],
+);
+
+// ── Webhook Endpoints (Section 19) ──
+
+export const webhookEndpoints = pgTable(
+  'webhook_endpoints',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    url: text('url').notNull(),
+    secret: text('secret').notNull(),
+    events: jsonb('events').$type<string[]>().notNull().default([]),
+    active: boolean('active').notNull().default(true),
+    description: varchar('description', { length: 500 }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [index('webhook_endpoints_tenant_id_idx').on(table.tenantId)],
+);
+
+export const webhookDeliveries = pgTable(
+  'webhook_deliveries',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    endpointId: uuid('endpoint_id')
+      .notNull()
+      .references(() => webhookEndpoints.id, { onDelete: 'cascade' }),
+    eventType: varchar('event_type', { length: 128 }).notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
+    statusCode: integer('status_code'),
+    responseBody: text('response_body'),
+    attempts: integer('attempts').notNull().default(0),
+    maxAttempts: integer('max_attempts').notNull().default(5),
+    nextRetryAt: timestamp('next_retry_at', { withTimezone: true }),
+    deliveredAt: timestamp('delivered_at', { withTimezone: true }),
+    failedAt: timestamp('failed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('webhook_deliveries_endpoint_id_idx').on(table.endpointId),
+    index('webhook_deliveries_next_retry_idx').on(table.nextRetryAt),
+    index('webhook_deliveries_created_at_idx').on(table.createdAt),
+  ],
+);
+
+// ── Audit Logs ──
+
 export const auditLogs = pgTable(
   'audit_logs',
   {
@@ -170,14 +268,18 @@ export const auditLogs = pgTable(
     resourceType: resourceTypeEnum('resource_type'),
     diff: jsonb('diff').$type<Record<string, unknown>>(),
     ipAddress: varchar('ip_address', { length: 45 }),
+    correlationId: varchar('correlation_id', { length: 64 }),
     timestamp: timestamp('timestamp', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     index('audit_logs_tenant_id_idx').on(table.tenantId),
     index('audit_logs_timestamp_idx').on(table.timestamp),
     index('audit_logs_tenant_timestamp_idx').on(table.tenantId, table.timestamp),
+    index('audit_logs_correlation_id_idx').on(table.correlationId),
   ],
 );
+
+// ── Quotas ──
 
 export const quotas = pgTable(
   'quotas',
@@ -192,6 +294,8 @@ export const quotas = pgTable(
   },
   (table) => [index('quotas_tenant_resource_idx').on(table.tenantId, table.resourceType)],
 );
+
+// ── Billing ──
 
 export const billingAccounts = pgTable('billing_accounts', {
   id: uuid('id').primaryKey().defaultRandom(),
