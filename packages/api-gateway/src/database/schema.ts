@@ -72,7 +72,27 @@ export const auditActionEnum = pgEnum('audit_action', [
   'logout',
   'api_key_created',
   'api_key_revoked',
+  // IAM actions
+  'role_created',
+  'role_updated',
+  'role_deleted',
+  'user_invited',
+  'user_role_assigned',
+  'user_role_revoked',
+  'user_removed',
+  'service_account_created',
+  'service_account_deleted',
+  'permission_denied',
 ]);
+
+export const invitationStatusEnum = pgEnum('invitation_status', [
+  'pending',
+  'accepted',
+  'expired',
+  'revoked',
+]);
+
+export const serviceAccountStatusEnum = pgEnum('service_account_status', ['active', 'disabled']);
 
 // ── Tables ──
 
@@ -337,6 +357,127 @@ export const billingAccounts = pgTable('billing_accounts', {
     .defaultNow()
     .$onUpdate(() => new Date()),
 });
+
+// ── IAM: Custom Roles ──
+
+export const iamRoles = pgTable(
+  'iam_roles',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 128 }).notNull(),
+    description: text('description'),
+    permissions: jsonb('permissions').$type<string[]>().notNull().default([]),
+    builtIn: boolean('built_in').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex('iam_roles_tenant_name_idx').on(table.tenantId, table.name),
+    index('iam_roles_tenant_id_idx').on(table.tenantId),
+  ],
+);
+
+// ── IAM: User ↔ Role (many-to-many) ──
+
+export const userIamRoles = pgTable(
+  'user_iam_roles',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    iamRoleId: uuid('iam_role_id')
+      .notNull()
+      .references(() => iamRoles.id, { onDelete: 'cascade' }),
+    assignedAt: timestamp('assigned_at', { withTimezone: true }).notNull().defaultNow(),
+    assignedBy: uuid('assigned_by').references(() => users.id, { onDelete: 'set null' }),
+  },
+  (table) => [
+    uniqueIndex('user_iam_roles_user_role_idx').on(table.userId, table.iamRoleId),
+    index('user_iam_roles_user_id_idx').on(table.userId),
+    index('user_iam_roles_role_id_idx').on(table.iamRoleId),
+  ],
+);
+
+// ── IAM: Service Accounts ──
+
+export const serviceAccounts = pgTable(
+  'service_accounts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 255 }).notNull(),
+    description: text('description'),
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id, { onDelete: 'set null' }),
+    status: serviceAccountStatusEnum('status').notNull().default('active'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex('service_accounts_tenant_name_idx').on(table.tenantId, table.name),
+    index('service_accounts_tenant_id_idx').on(table.tenantId),
+  ],
+);
+
+// ── IAM: Service Account ↔ Role (many-to-many) ──
+
+export const serviceAccountIamRoles = pgTable(
+  'service_account_iam_roles',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    serviceAccountId: uuid('service_account_id')
+      .notNull()
+      .references(() => serviceAccounts.id, { onDelete: 'cascade' }),
+    iamRoleId: uuid('iam_role_id')
+      .notNull()
+      .references(() => iamRoles.id, { onDelete: 'cascade' }),
+    assignedAt: timestamp('assigned_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('sa_iam_roles_sa_role_idx').on(table.serviceAccountId, table.iamRoleId),
+    index('sa_iam_roles_sa_id_idx').on(table.serviceAccountId),
+  ],
+);
+
+// ── IAM: User Invitations ──
+
+export const userInvitations = pgTable(
+  'user_invitations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    email: varchar('email', { length: 255 }).notNull(),
+    invitedBy: uuid('invited_by')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    iamRoleIds: jsonb('iam_role_ids').$type<string[]>().notNull().default([]),
+    status: invitationStatusEnum('status').notNull().default('pending'),
+    token: varchar('token', { length: 255 }).notNull().unique(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('user_invitations_tenant_id_idx').on(table.tenantId),
+    index('user_invitations_email_idx').on(table.email),
+    index('user_invitations_token_idx').on(table.token),
+    index('user_invitations_expires_at_idx').on(table.expiresAt),
+  ],
+);
 
 export const usageRecords = pgTable(
   'usage_records',

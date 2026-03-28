@@ -78,7 +78,35 @@
 - [x] Default quota assignment on creation
 - [x] Tenant slug uniqueness validation
 
-### 0.6 GitOps Service — Tenant Repo Bootstrapping
+### 0.6 Tenant IAM (Identity & Access Management)
+
+- [x] Permission model design (`resource:action` convention)
+- [x] IAM permission constants and enums (`packages/common`)
+- [x] `iam_roles` table (custom roles per tenant with JSONB permissions)
+- [x] `user_iam_roles` junction table (user ↔ role many-to-many)
+- [x] `service_accounts` table (machine identity per tenant)
+- [x] `service_account_iam_roles` junction table
+- [x] `user_invitations` table (invite flow with token + expiry)
+- [x] Built-in role definitions (tenant-admin, developer, billing-admin, read-only)
+- [x] IAM audit action enums (role_created, role_updated, user_invited, etc.)
+- [x] IAM event types for NATS stream
+- [ ] IAM permission guard (evaluate user roles → permissions on each request)
+- [ ] `POST /api/v1/iam/roles` — create custom role
+- [ ] `GET /api/v1/iam/roles` — list roles for tenant
+- [ ] `PATCH /api/v1/iam/roles/:id` — update role permissions
+- [ ] `DELETE /api/v1/iam/roles/:id` — delete custom role (not built-in)
+- [ ] `POST /api/v1/iam/users/invite` — invite user to tenant
+- [ ] `GET /api/v1/iam/users` — list tenant users with roles
+- [ ] `PATCH /api/v1/iam/users/:id/roles` — assign/revoke roles
+- [ ] `DELETE /api/v1/iam/users/:id` — remove user from tenant
+- [ ] `POST /api/v1/iam/service-accounts` — create service account
+- [ ] `GET /api/v1/iam/service-accounts` — list service accounts
+- [ ] `POST /api/v1/iam/service-accounts/:id/keys` — issue API key for service account
+- [ ] `DELETE /api/v1/iam/service-accounts/:id` — delete service account
+- [ ] Seed built-in roles on tenant creation
+- [ ] JWT `permissions` claim (cached permission set in token)
+
+### 0.7 GitOps Service — Tenant Repo Bootstrapping
 
 - [x] Gitea/Forgejo API client (`packages/services/gitops`)
 - [x] Tenant repo creation on tenant provisioning
@@ -94,7 +122,7 @@
 - [x] OpenTofu runner: plan output storage and logging
 - [x] Repo archival on tenant deletion
 
-### 0.7 Event Bus (NATS JetStream)
+### 0.8 Event Bus (NATS JetStream)
 
 - [x] NATS server deployment (dev docker-compose + production cluster)
 - [x] JetStream configuration (streams, consumers, retention) — `@cloudify/nats` package
@@ -105,7 +133,7 @@
 - [x] Event publishing helper (type-safe, auto-envelope) — `createPublisher()`
 - [x] Event consumer helper (idempotent processing, error handling) — `consumeEvents()`
 
-### 0.8 Hypervisor Abstraction Layer
+### 0.9 Hypervisor Abstraction Layer
 
 - [x] `HypervisorProvider` interface definition (`packages/hypervisor/core`)
 - [x] VM lifecycle methods (create, destroy, start, stop, resize, snapshot, restore, migrate)
@@ -116,7 +144,7 @@
 - [x] Proxmox implementation (`packages/hypervisor/proxmox`) — full Proxmox VE API client + provider
 - [x] Provider factory (config-driven selection) — `createProvider()` in hypervisor-core
 
-### 0.9 Common Package
+### 0.10 Common Package
 
 - [x] Shared DTOs and interfaces (`packages/common`)
 - [x] Error classes and error codes (`CloudifyError`, `ErrorCode`, specialized error classes)
@@ -130,23 +158,25 @@
 
 ## Phase 0 Summary
 
-| Section                            | Status    | Items  | Done   | Progress |
-| ---------------------------------- | --------- | ------ | ------ | -------- |
-| 0.1 Developer Environment          | ~Complete | 7      | 5      | 71%      |
-| 0.2 Control-Plane Database         | Complete  | 15     | 15     | 100%     |
-| 0.3 Authentication & Authorization | Complete  | 9      | 9      | 100%     |
-| 0.4 API Gateway                    | Complete  | 13     | 12     | 92%      |
-| 0.5 Tenant Lifecycle               | Complete  | 8      | 8      | 100%     |
-| 0.6 GitOps Service                 | Complete  | 12     | 12     | 100%     |
-| 0.7 Event Bus                      | Complete  | 8      | 8      | 100%     |
-| 0.8 Hypervisor Abstraction         | Complete  | 8      | 8      | 100%     |
-| 0.9 Common Package                 | Complete  | 7      | 7      | 100%     |
-| **Phase 0 Total**                  |           | **87** | **84** | **97%**  |
+| Section                            | Status      | Items   | Done   | Progress |
+| ---------------------------------- | ----------- | ------- | ------ | -------- |
+| 0.1 Developer Environment          | ~Complete   | 7       | 5      | 71%      |
+| 0.2 Control-Plane Database         | Complete    | 15      | 15     | 100%     |
+| 0.3 Authentication & Authorization | Complete    | 9       | 9      | 100%     |
+| 0.4 API Gateway                    | Complete    | 13      | 12     | 92%      |
+| 0.5 Tenant Lifecycle               | Complete    | 8       | 8      | 100%     |
+| 0.6 Tenant IAM                     | In Progress | 24      | 9      | 38%      |
+| 0.7 GitOps Service                 | Complete    | 12      | 12     | 100%     |
+| 0.8 Event Bus                      | Complete    | 8       | 8      | 100%     |
+| 0.9 Hypervisor Abstraction         | Complete    | 8       | 8      | 100%     |
+| 0.10 Common Package                | Complete    | 7       | 7      | 100%     |
+| **Phase 0 Total**                  |             | **111** | **93** | **84%**  |
 
 Remaining Phase 0 items (non-blocking for Phase 1):
 
 - Conventional Commits + semantic-release
 - CONTRIBUTING.md
+- Tenant IAM API endpoints and guards (0.6)
 
 ---
 

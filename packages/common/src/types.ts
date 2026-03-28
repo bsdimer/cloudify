@@ -1,4 +1,12 @@
-import { TenantStatus, UserRole, ResourceType, ResourceStatus, AuditAction } from './enums';
+import {
+  TenantStatus,
+  UserRole,
+  ResourceType,
+  ResourceStatus,
+  AuditAction,
+  InvitationStatus,
+  ServiceAccountStatus,
+} from './enums';
 
 export interface Tenant {
   id: string;
@@ -82,6 +90,125 @@ export interface UsageRecord {
   metric: string;
   value: number;
   timestamp: Date;
+}
+
+// ── IAM Types ──
+
+/** Permission string in `domain:action` format */
+export type IamPermission = `${string}:${string}`;
+
+/** Custom IAM role within a tenant */
+export interface IamRole {
+  id: string;
+  tenantId: string;
+  name: string;
+  description: string | null;
+  permissions: IamPermission[];
+  builtIn: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** Service account (machine identity) within a tenant */
+export interface ServiceAccount {
+  id: string;
+  tenantId: string;
+  name: string;
+  description: string | null;
+  createdBy: string;
+  status: ServiceAccountStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** User invitation to join a tenant */
+export interface UserInvitation {
+  id: string;
+  tenantId: string;
+  email: string;
+  invitedBy: string;
+  iamRoleIds: string[];
+  status: InvitationStatus;
+  token: string;
+  expiresAt: Date;
+  createdAt: Date;
+}
+
+/**
+ * Built-in IAM role definitions.
+ * Seeded on tenant creation — cannot be deleted.
+ */
+export const BUILT_IN_ROLES: Record<
+  string,
+  { name: string; description: string; permissions: IamPermission[] }
+> = {
+  'tenant-admin': {
+    name: 'tenant-admin',
+    description: 'Full access to all tenant resources and IAM management',
+    permissions: ['*:*'],
+  },
+  developer: {
+    name: 'developer',
+    description: 'Create and manage compute, storage, and read databases/networks',
+    permissions: [
+      'compute:create',
+      'compute:read',
+      'compute:update',
+      'compute:delete',
+      'database:read',
+      'storage:create',
+      'storage:read',
+      'storage:update',
+      'storage:delete',
+      'network:read',
+      'dns:read',
+      'certificates:read',
+      'secrets:read',
+      'registry:create',
+      'registry:read',
+      'registry:update',
+    ],
+  },
+  'billing-admin': {
+    name: 'billing-admin',
+    description: 'Manage billing, view usage, and read IAM configuration',
+    permissions: [
+      'billing:create',
+      'billing:read',
+      'billing:update',
+      'billing:delete',
+      'iam:read',
+      'audit:read',
+    ],
+  },
+  'read-only': {
+    name: 'read-only',
+    description: 'Read-only access to all tenant resources',
+    permissions: ['*:read'],
+  },
+};
+
+/**
+ * Check if a set of granted permissions includes the required permission.
+ * Supports wildcards: `*:*` grants everything, `compute:*` grants all compute actions.
+ */
+export function hasPermission(granted: IamPermission[], required: IamPermission): boolean {
+  const [reqDomain, reqAction] = required.split(':');
+
+  for (const perm of granted) {
+    const [grantDomain, grantAction] = perm.split(':');
+
+    // Full wildcard
+    if (grantDomain === '*' && grantAction === '*') return true;
+    // Domain wildcard with matching action
+    if (grantDomain === '*' && (grantAction === reqAction || grantAction === '*')) return true;
+    // Matching domain with action wildcard
+    if (grantDomain === reqDomain && grantAction === '*') return true;
+    // Exact match
+    if (grantDomain === reqDomain && grantAction === reqAction) return true;
+  }
+
+  return false;
 }
 
 /** Standard API response wrapper */

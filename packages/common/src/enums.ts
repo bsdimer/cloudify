@@ -55,6 +55,69 @@ export enum AuditAction {
   LOGOUT = 'logout',
   API_KEY_CREATED = 'api_key_created',
   API_KEY_REVOKED = 'api_key_revoked',
+  // IAM actions
+  ROLE_CREATED = 'role_created',
+  ROLE_UPDATED = 'role_updated',
+  ROLE_DELETED = 'role_deleted',
+  USER_INVITED = 'user_invited',
+  USER_ROLE_ASSIGNED = 'user_role_assigned',
+  USER_ROLE_REVOKED = 'user_role_revoked',
+  USER_REMOVED = 'user_removed',
+  SERVICE_ACCOUNT_CREATED = 'service_account_created',
+  SERVICE_ACCOUNT_DELETED = 'service_account_deleted',
+  PERMISSION_DENIED = 'permission_denied',
+}
+
+// ── IAM Enums ──
+
+/**
+ * Fine-grained IAM permission domains.
+ * Format: `<domain>:<action>` — e.g., `compute:create`, `database:read`.
+ */
+export enum IamDomain {
+  COMPUTE = 'compute',
+  DATABASE = 'database',
+  NETWORK = 'network',
+  STORAGE = 'storage',
+  DNS = 'dns',
+  CERTIFICATES = 'certificates',
+  SECRETS = 'secrets',
+  REGISTRY = 'registry',
+  IAM = 'iam',
+  BILLING = 'billing',
+  AUDIT = 'audit',
+  ALL = '*',
+}
+
+export enum IamAction {
+  CREATE = 'create',
+  READ = 'read',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  MANAGE = 'manage',
+  ALL = '*',
+}
+
+/**
+ * Built-in IAM role names seeded per tenant on creation.
+ */
+export enum BuiltInIamRole {
+  TENANT_ADMIN = 'tenant-admin',
+  DEVELOPER = 'developer',
+  BILLING_ADMIN = 'billing-admin',
+  READ_ONLY = 'read-only',
+}
+
+export enum InvitationStatus {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  EXPIRED = 'expired',
+  REVOKED = 'revoked',
+}
+
+export enum ServiceAccountStatus {
+  ACTIVE = 'active',
+  DISABLED = 'disabled',
 }
 
 export enum CertificateStatus {
