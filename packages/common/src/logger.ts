@@ -61,7 +61,12 @@ export function createLogger(serviceName: string, minLevel: LogLevel = 'info'): 
     return LOG_LEVEL_PRIORITY[level] >= minPriority;
   }
 
-  function formatEntry(level: LogLevel, message: string, context?: LogContext, error?: Error | unknown): LogEntry {
+  function formatEntry(
+    level: LogLevel,
+    message: string,
+    context?: LogContext,
+    error?: Error | unknown,
+  ): LogEntry {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level,

@@ -29,10 +29,7 @@ export interface ConsumeOptions {
   maxConcurrent?: number;
 }
 
-export type EventHandler<T = unknown> = (
-  envelope: EventEnvelope<T>,
-  msg: JsMsg,
-) => Promise<void>;
+export type EventHandler<T = unknown> = (envelope: EventEnvelope<T>, msg: JsMsg) => Promise<void>;
 
 /**
  * Idempotent event consumer with automatic DLQ routing.
@@ -111,11 +108,9 @@ export async function consumeEvents<T = unknown>(
 
         if (redeliveries >= maxRedeliver - 1) {
           // Max retries exceeded — route to DLQ
-          logger.error(
-            `Event failed after ${redeliveries + 1} attempts, routing to DLQ`,
-            error,
-            { subject: msg.subject },
-          );
+          logger.error(`Event failed after ${redeliveries + 1} attempts, routing to DLQ`, error, {
+            subject: msg.subject,
+          });
 
           await routeToDLQ(js, msg, error);
           msg.term();
@@ -154,11 +149,10 @@ async function routeToDLQ(js: JetStreamClient, msg: JsMsg, error: unknown): Prom
       redeliveryCount: msg.info.redeliveryCount,
     };
 
-    await publishEvent(
-      `${DEAD_LETTER_STREAM}.${msg.subject.replace(/\./g, '-')}`,
-      dlqPayload,
-      { sourceService: 'consumer-dlq', tenantId: null },
-    );
+    await publishEvent(`${DEAD_LETTER_STREAM}.${msg.subject.replace(/\./g, '-')}`, dlqPayload, {
+      sourceService: 'consumer-dlq',
+      tenantId: null,
+    });
   } catch (dlqError) {
     logger.error('Failed to route message to DLQ', dlqError);
   }

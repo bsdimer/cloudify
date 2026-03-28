@@ -30,13 +30,18 @@ const MAX_PER_PAGE = 100;
 /**
  * Normalize raw pagination query params into safe values.
  */
-export function normalizePagination(query: PaginationQuery): Required<Pick<PaginationQuery, 'page' | 'perPage'>> & {
+export function normalizePagination(query: PaginationQuery): Required<
+  Pick<PaginationQuery, 'page' | 'perPage'>
+> & {
   offset: number;
   sortBy: string;
   sortOrder: 'asc' | 'desc';
 } {
   const page = Math.max(1, Math.floor(query.page ?? DEFAULT_PAGE));
-  const perPage = Math.min(MAX_PER_PAGE, Math.max(1, Math.floor(query.perPage ?? DEFAULT_PER_PAGE)));
+  const perPage = Math.min(
+    MAX_PER_PAGE,
+    Math.max(1, Math.floor(query.perPage ?? DEFAULT_PER_PAGE)),
+  );
   const offset = (page - 1) * perPage;
   const sortBy = query.sortBy ?? 'createdAt';
   const sortOrder = query.sortOrder === 'desc' ? 'desc' : 'asc';
@@ -47,7 +52,12 @@ export function normalizePagination(query: PaginationQuery): Required<Pick<Pagin
 /**
  * Build a PaginatedResult from rows + total count.
  */
-export function paginate<T>(rows: T[], total: number, page: number, perPage: number): PaginatedResult<T> {
+export function paginate<T>(
+  rows: T[],
+  total: number,
+  page: number,
+  perPage: number,
+): PaginatedResult<T> {
   const totalPages = Math.ceil(total / perPage);
 
   return {

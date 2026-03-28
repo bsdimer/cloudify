@@ -11,7 +11,8 @@ import type { resourceTypeEnum } from './schema';
 
 type ResourceTypeValue = (typeof resourceTypeEnum.enumValues)[number];
 
-const DATABASE_URL = process.env.DATABASE_URL || 'postgres://cloudify:cloudify@localhost:5432/cloudify';
+const DATABASE_URL =
+  process.env.DATABASE_URL || 'postgres://cloudify:cloudify@localhost:5432/cloudify';
 
 const DEFAULT_QUOTAS: { resourceType: ResourceTypeValue; limit: number }[] = [
   { resourceType: 'k8s_cluster', limit: 3 },

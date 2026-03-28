@@ -121,16 +121,16 @@ self-service portal — without building a cloud from scratch.
 
 ### Key Architectural Decisions
 
-| Decision | Rationale |
-|----------|-----------|
-| Control plane on **separate machines** | Tenant workload failures or resource spikes cannot degrade the management layer. |
-| **NestJS** backend (TypeScript) | Strong typing, decorator-based DI, built-in microservice transports (NATS, Redis, gRPC), large ecosystem. |
-| **React** frontend | Mature component ecosystem, strong community, good fit for complex dashboards. |
-| **OpenTofu** for tenant IaC | Open-source Terraform fork; declarative, plan/apply model, provider ecosystem. |
-| **Per-tenant Git repo** (Gitea/Forgejo) | Auditable history, easy rollback via `git revert`, GitOps-friendly. |
-| **Proxmox first**, VMware later | Proxmox is free, API-rich, KVM-based. VMware adds enterprise compat. |
-| **OVN** for SDN | Production-grade, supports overlays (Geneve/VXLAN), distributed routing, ACLs, native integration with KVM/Proxmox. |
-| **Keepalived + HAProxy** for LB | Battle-tested HA with VRRP, real IP preservation, L4/L7 capable. |
+| Decision                                | Rationale                                                                                                           |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Control plane on **separate machines**  | Tenant workload failures or resource spikes cannot degrade the management layer.                                    |
+| **NestJS** backend (TypeScript)         | Strong typing, decorator-based DI, built-in microservice transports (NATS, Redis, gRPC), large ecosystem.           |
+| **React** frontend                      | Mature component ecosystem, strong community, good fit for complex dashboards.                                      |
+| **OpenTofu** for tenant IaC             | Open-source Terraform fork; declarative, plan/apply model, provider ecosystem.                                      |
+| **Per-tenant Git repo** (Gitea/Forgejo) | Auditable history, easy rollback via `git revert`, GitOps-friendly.                                                 |
+| **Proxmox first**, VMware later         | Proxmox is free, API-rich, KVM-based. VMware adds enterprise compat.                                                |
+| **OVN** for SDN                         | Production-grade, supports overlays (Geneve/VXLAN), distributed routing, ACLs, native integration with KVM/Proxmox. |
+| **Keepalived + HAProxy** for LB         | Battle-tested HA with VRRP, real IP preservation, L4/L7 capable.                                                    |
 
 ---
 
@@ -434,6 +434,7 @@ Services K8s Cluster (managed by control plane)
 ```
 
 Each tenant's managed service runs in an isolated namespace with:
+
 - NetworkPolicy restricting traffic to the tenant's SDN
 - ResourceQuota matching the tenant's plan
 - Separate PVCs on the storage backend
@@ -514,7 +515,7 @@ Certificate Service (NestJS)
   upload custom CA certs and issue from them (for internal/private domains)
 - **Let's Encrypt rate limit awareness**: track issuance counts per registered
   domain, warn when approaching limits, batch renewals intelligently
-- **API**: 
+- **API**:
   - `POST /api/v1/certificates` — request a new certificate
   - `GET /api/v1/certificates` — list all certs for tenant
   - `GET /api/v1/certificates/:id` — cert detail (expiry, domains, status)
@@ -533,13 +534,13 @@ Pending → Validating → Issuing → Active → Renewing → Active
 
 **Integration points:**
 
-| Consumer | How cert is delivered |
-|----------|---------------------|
-| Edge HAProxy LBs | Cert written to shared storage or pushed via HAProxy Data Plane API; HAProxy reloads without downtime (hitless reload) |
-| Tenant K8s ingress | cert-manager CRDs synced via External Secrets Operator, or Cloudify cert controller watches Certificate resources |
-| Managed Postgres | SSL cert injected into instance config, connection string updated |
-| Managed MinIO | HTTPS endpoint cert updated, MinIO restarted gracefully |
-| Artifact Registry (Harbor) | Registry endpoint cert updated |
+| Consumer                   | How cert is delivered                                                                                                  |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Edge HAProxy LBs           | Cert written to shared storage or pushed via HAProxy Data Plane API; HAProxy reloads without downtime (hitless reload) |
+| Tenant K8s ingress         | cert-manager CRDs synced via External Secrets Operator, or Cloudify cert controller watches Certificate resources      |
+| Managed Postgres           | SSL cert injected into instance config, connection string updated                                                      |
+| Managed MinIO              | HTTPS endpoint cert updated, MinIO restarted gracefully                                                                |
+| Artifact Registry (Harbor) | Registry endpoint cert updated                                                                                         |
 
 **Control-plane internal PKI:**
 
@@ -607,12 +608,14 @@ Pending → Validating → Issuing → Active → Renewing → Active
 ### 8.2 Tenant Self-Service Portal (`web-portal`)
 
 #### Dashboard
+
 - Resource summary (K8s clusters, DBs, storage, etc.)
 - Cost overview (current month spend, burn rate)
 - Health status of all resources
 - Recent activity feed (audit log)
 
 #### Compute — Kubernetes
+
 - Cluster list with health indicators
 - Create cluster wizard (version, node pool config, networking)
 - Cluster detail: node list, scale controls, upgrade button
@@ -620,18 +623,21 @@ Pending → Validating → Issuing → Active → Renewing → Active
 - Kubectl web terminal (optional, via WebSocket)
 
 #### Databases
+
 - Instance list (Postgres, Mongo, Valkey) with status
 - Create instance form (engine, version, size, backup schedule)
 - Instance detail: connection info, metrics (CPU, memory, connections, queries/sec)
 - Backup management: list backups, trigger manual backup, restore
 
 #### Storage
+
 - Bucket list with usage bars
 - Create bucket, configure policies
 - File browser (list objects, upload/download, generate pre-signed URL)
 - Lifecycle rule editor
 
 #### Networking
+
 - SDN overview: subnets, routing table, peering
 - Firewall rules editor (security groups)
 - IP address management: allocate, release, assign floating IPs
@@ -639,6 +645,7 @@ Pending → Validating → Issuing → Active → Renewing → Active
 - DNS zone editor: visual record management, import zone file
 
 #### SSL/TLS Certificates
+
 - Certificate list with status badges (Active, Expiring, Expired, Pending)
 - Request certificate wizard: enter domain(s), choose validation method (auto DNS vs manual)
 - Certificate detail: domains covered, issuer, expiry date, renewal history
@@ -649,16 +656,19 @@ Pending → Validating → Issuing → Active → Renewing → Active
 - Custom CA upload (for private/internal certificates)
 
 #### Secrets
+
 - Secret list with version history
 - Create/update/delete secrets
 - K8s sync configuration (which clusters, which namespaces)
 
 #### Registry
+
 - Repository list, image tags with vulnerability badges
 - Push instructions / token generation
 - Retention policy configuration
 
 #### Settings
+
 - Team management: invite users, assign roles
 - API keys: create, revoke, scope management
 - Billing: current plan, usage, invoices, payment method
@@ -826,6 +836,7 @@ Published as `@cloudify/plugin-sdk` npm package:
 7. Print summary: URLs, admin credentials, next steps
 
 Docker Compose stack includes:
+
 - API Gateway
 - Orchestrator + all service modules
 - PostgreSQL (control plane DB)
@@ -1031,20 +1042,21 @@ HCL resource definitions into Cloudify API calls. This provider:
 
 ### Network Objects per Tenant
 
-| Object | Description |
-|--------|------------|
-| VPC (Virtual Private Cloud) | Logical container for all tenant networks |
-| Subnet | IP range within a VPC, mapped to an OVN logical switch |
-| Router | OVN logical router connecting subnets |
-| Security Group | Set of ACL rules applied to ports |
-| Floating IP | Public IP DNATed to a private IP |
-| NAT Gateway | SNAT for outbound internet from private subnets |
-| Peering | Cross-tenant or cross-VPC route exchange (explicit opt-in) |
-| VPN Gateway | WireGuard endpoint for site-to-site connectivity (future) |
+| Object                      | Description                                                |
+| --------------------------- | ---------------------------------------------------------- |
+| VPC (Virtual Private Cloud) | Logical container for all tenant networks                  |
+| Subnet                      | IP range within a VPC, mapped to an OVN logical switch     |
+| Router                      | OVN logical router connecting subnets                      |
+| Security Group              | Set of ACL rules applied to ports                          |
+| Floating IP                 | Public IP DNATed to a private IP                           |
+| NAT Gateway                 | SNAT for outbound internet from private subnets            |
+| Peering                     | Cross-tenant or cross-VPC route exchange (explicit opt-in) |
+| VPN Gateway                 | WireGuard endpoint for site-to-site connectivity (future)  |
 
 ### Integration with Proxmox SDN
 
 Proxmox 8+ includes SDN support with OVN as a backend:
+
 - Zones, VNets, and Subnets configurable via Proxmox API
 - VMs attach to VNets at creation time
 - Cloudify network service uses the Proxmox SDN API to create/manage these objects
@@ -1056,79 +1068,79 @@ Proxmox 8+ includes SDN support with OVN as a backend:
 
 ### Backend (Control Plane)
 
-| Component | Technology |
-|-----------|-----------|
-| API Gateway & Services | NestJS (TypeScript) |
-| Inter-service communication | NATS or Redis Streams |
-| Control-plane database | PostgreSQL 16+ |
-| Job queue / cache | Valkey (Redis-compatible) |
-| IaC engine | OpenTofu |
-| Git hosting (tenant repos) | Gitea / Forgejo |
-| Secret management | HashiCorp Vault or OpenBao |
-| DNS server | PowerDNS |
-| Certificate management | ACME v2 (node-acme-client or Lego) + Let's Encrypt |
-| Internal PKI | Vault PKI engine or step-ca |
-| Object storage | MinIO |
-| Artifact registry | Harbor |
-| Monitoring | Prometheus + Grafana |
-| Logging | Loki + Promtail (or ELK) |
-| Reverse proxy / TLS | Traefik or Nginx |
+| Component                   | Technology                                         |
+| --------------------------- | -------------------------------------------------- |
+| API Gateway & Services      | NestJS (TypeScript)                                |
+| Inter-service communication | NATS or Redis Streams                              |
+| Control-plane database      | PostgreSQL 16+                                     |
+| Job queue / cache           | Valkey (Redis-compatible)                          |
+| IaC engine                  | OpenTofu                                           |
+| Git hosting (tenant repos)  | Gitea / Forgejo                                    |
+| Secret management           | HashiCorp Vault or OpenBao                         |
+| DNS server                  | PowerDNS                                           |
+| Certificate management      | ACME v2 (node-acme-client or Lego) + Let's Encrypt |
+| Internal PKI                | Vault PKI engine or step-ca                        |
+| Object storage              | MinIO                                              |
+| Artifact registry           | Harbor                                             |
+| Monitoring                  | Prometheus + Grafana                               |
+| Logging                     | Loki + Promtail (or ELK)                           |
+| Reverse proxy / TLS         | Traefik or Nginx                                   |
 
 ### Frontend
 
-| Component | Technology |
-|-----------|-----------|
-| Framework | React 18+ (TypeScript) |
-| Build tool | Vite |
-| Styling | Tailwind CSS |
-| Component library | Shadcn/ui (customized) |
-| State management | TanStack Query + Zustand |
-| Charts | Recharts or Tremor |
-| Forms | React Hook Form + Zod |
-| Routing | React Router v6+ |
+| Component         | Technology               |
+| ----------------- | ------------------------ |
+| Framework         | React 18+ (TypeScript)   |
+| Build tool        | Vite                     |
+| Styling           | Tailwind CSS             |
+| Component library | Shadcn/ui (customized)   |
+| State management  | TanStack Query + Zustand |
+| Charts            | Recharts or Tremor       |
+| Forms             | React Hook Form + Zod    |
+| Routing           | React Router v6+         |
 
 ### Data Plane
 
-| Component | Technology |
-|-----------|-----------|
-| Hypervisor | Proxmox VE (KVM) → VMware (future) |
-| SDN | OVN via Proxmox SDN |
-| Kubernetes bootstrap | kubeadm + cloud-init |
-| K8s CNI | Cilium |
-| K8s CSI | Proxmox CSI driver |
-| K8s ingress | Nginx Ingress Controller or Envoy |
-| Load balancing | Keepalived + HAProxy |
-| Managed Postgres | CloudNativePG operator |
-| Managed MongoDB | MongoDB Community Operator |
-| Managed Valkey | Custom operator or Helm-based |
+| Component            | Technology                         |
+| -------------------- | ---------------------------------- |
+| Hypervisor           | Proxmox VE (KVM) → VMware (future) |
+| SDN                  | OVN via Proxmox SDN                |
+| Kubernetes bootstrap | kubeadm + cloud-init               |
+| K8s CNI              | Cilium                             |
+| K8s CSI              | Proxmox CSI driver                 |
+| K8s ingress          | Nginx Ingress Controller or Envoy  |
+| Load balancing       | Keepalived + HAProxy               |
+| Managed Postgres     | CloudNativePG operator             |
+| Managed MongoDB      | MongoDB Community Operator         |
+| Managed Valkey       | Custom operator or Helm-based      |
 
 ### DevOps & Tooling
 
-| Component | Technology |
-|-----------|-----------|
-| Monorepo | Nx |
-| CI/CD | GitHub Actions |
-| Container registry | GitHub Container Registry (ghcr.io) |
-| Deployment (Day-1) | Docker Compose |
-| Deployment (Day-2) | Helm |
-| Testing | Jest (unit), Supertest (API), Playwright (E2E) |
-| Documentation | Docusaurus or MkDocs |
+| Component          | Technology                                     |
+| ------------------ | ---------------------------------------------- |
+| Monorepo           | Nx                                             |
+| CI/CD              | GitHub Actions                                 |
+| Container registry | GitHub Container Registry (ghcr.io)            |
+| Deployment (Day-1) | Docker Compose                                 |
+| Deployment (Day-2) | Helm                                           |
+| Testing            | Jest (unit), Supertest (API), Playwright (E2E) |
+| Documentation      | Docusaurus or MkDocs                           |
 
 ---
 
 ## 16. Risk Register
 
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| Scope creep — too many services before core is stable | High | High | Strict phase gates; launch K8s + 1 DB before adding more |
-| OVN/SDN complexity — networking bugs are hard to debug | High | Medium | Start with Proxmox SDN (simpler), invest in network integration tests |
-| OpenTofu state corruption | High | Low | State locking (Postgres backend), regular state backups, import/recovery tooling |
-| Proxmox API gaps — not all operations are API-exposed | Medium | Medium | Audit Proxmox API coverage early; fallback to SSH/CLI wrappers where needed |
-| Single contributor bottleneck | High | High | Document everything, modular architecture, encourage community early |
-| Security incident (tenant isolation breach) | Critical | Low | Defense in depth: SDN isolation + namespace isolation + RBAC + audit logging |
-| Performance at scale (100+ tenants) | Medium | Medium | Load test each phase; horizontal scaling for stateless services |
-| Let's Encrypt rate limits hit at scale | Medium | Medium | Track issuance per domain, batch renewals, use multiple ACME accounts, add ZeroSSL/BuyPass as fallback CAs |
-| Open-source sustainability | Medium | Medium | Clear governance, contributor guide, consider sponsorship/support model |
+| Risk                                                   | Impact   | Likelihood | Mitigation                                                                                                 |
+| ------------------------------------------------------ | -------- | ---------- | ---------------------------------------------------------------------------------------------------------- |
+| Scope creep — too many services before core is stable  | High     | High       | Strict phase gates; launch K8s + 1 DB before adding more                                                   |
+| OVN/SDN complexity — networking bugs are hard to debug | High     | Medium     | Start with Proxmox SDN (simpler), invest in network integration tests                                      |
+| OpenTofu state corruption                              | High     | Low        | State locking (Postgres backend), regular state backups, import/recovery tooling                           |
+| Proxmox API gaps — not all operations are API-exposed  | Medium   | Medium     | Audit Proxmox API coverage early; fallback to SSH/CLI wrappers where needed                                |
+| Single contributor bottleneck                          | High     | High       | Document everything, modular architecture, encourage community early                                       |
+| Security incident (tenant isolation breach)            | Critical | Low        | Defense in depth: SDN isolation + namespace isolation + RBAC + audit logging                               |
+| Performance at scale (100+ tenants)                    | Medium   | Medium     | Load test each phase; horizontal scaling for stateless services                                            |
+| Let's Encrypt rate limits hit at scale                 | Medium   | Medium     | Track issuance per domain, batch renewals, use multiple ACME accounts, add ZeroSSL/BuyPass as fallback CAs |
+| Open-source sustainability                             | Medium   | Medium     | Clear governance, contributor guide, consider sponsorship/support model                                    |
 
 ---
 
@@ -1204,4 +1216,4 @@ Phase 8 — Hardening & GA                [Weeks 30–38]
 
 ---
 
-*This document is a living plan. Update it as decisions are made and scope evolves.*
+_This document is a living plan. Update it as decisions are made and scope evolves._

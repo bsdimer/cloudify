@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  Inject,
-  NotFoundException,
-  ConflictException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { DRIZZLE, type DrizzleDB } from '../database/database.module';
 import {
@@ -155,11 +149,7 @@ export class TenantsService {
   async update(id: string, data: { name?: string; status?: TenantStatusValue }) {
     await this.findById(id); // throws if not found
 
-    const [updated] = await this.db
-      .update(tenants)
-      .set(data)
-      .where(eq(tenants.id, id))
-      .returning();
+    const [updated] = await this.db.update(tenants).set(data).where(eq(tenants.id, id)).returning();
 
     return updated;
   }
@@ -175,10 +165,7 @@ export class TenantsService {
   async delete(id: string) {
     const tenant = await this.findById(id);
 
-    await this.db
-      .update(tenants)
-      .set({ status: 'decommissioned' })
-      .where(eq(tenants.id, id));
+    await this.db.update(tenants).set({ status: 'decommissioned' }).where(eq(tenants.id, id));
 
     this.logger.warn(`Tenant decommissioned: ${tenant.slug} (${tenant.id})`);
 

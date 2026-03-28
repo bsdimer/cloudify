@@ -35,7 +35,12 @@ const DEFAULT_OPTIONS: Required<Omit<RetryOptions, 'retryIf' | 'onRetry' | 'sign
 /**
  * Calculate delay for a given attempt using exponential backoff + jitter.
  */
-export function calculateBackoff(attempt: number, baseDelayMs: number, maxDelayMs: number, jitter: number): number {
+export function calculateBackoff(
+  attempt: number,
+  baseDelayMs: number,
+  maxDelayMs: number,
+  jitter: number,
+): number {
   // Exponential: base * 2^(attempt-1)
   const exponentialDelay = baseDelayMs * Math.pow(2, attempt - 1);
   const capped = Math.min(exponentialDelay, maxDelayMs);
@@ -122,5 +127,10 @@ export const RetryPresets = {
   aggressive: { maxAttempts: 10, baseDelayMs: 2000, maxDelayMs: 60000 } satisfies RetryOptions,
 
   /** Webhook delivery retry (5 attempts, exponential: 10s, 30s, 2m, 10m, 1h) */
-  webhook: { maxAttempts: 5, baseDelayMs: 10000, maxDelayMs: 3600000, jitter: 0.1 } satisfies RetryOptions,
+  webhook: {
+    maxAttempts: 5,
+    baseDelayMs: 10000,
+    maxDelayMs: 3600000,
+    jitter: 0.1,
+  } satisfies RetryOptions,
 } as const;

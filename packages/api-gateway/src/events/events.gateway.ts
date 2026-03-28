@@ -39,7 +39,8 @@ export class EventsGatewayWs implements OnGatewayConnection, OnGatewayDisconnect
   async handleConnection(client: AuthenticatedSocket) {
     try {
       const token =
-        client.handshake.auth?.token || client.handshake.headers?.authorization?.replace('Bearer ', '');
+        client.handshake.auth?.token ||
+        client.handshake.headers?.authorization?.replace('Bearer ', '');
 
       if (!token) {
         this.logger.warn(`Client ${client.id} disconnected: no token`);

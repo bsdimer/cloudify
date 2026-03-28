@@ -163,7 +163,11 @@ export class ProxmoxApi {
 
   // ── HTTP ──
 
-  private async request<T>(method: string, path: string, body?: Record<string, unknown>): Promise<T> {
+  private async request<T>(
+    method: string,
+    path: string,
+    body?: Record<string, unknown>,
+  ): Promise<T> {
     return retry(
       async () => {
         const headers = await this.getAuthHeaders();
@@ -291,7 +295,10 @@ export class ProxmoxApi {
   }
 
   async rollbackSnapshot(node: string, vmid: number, snapname: string): Promise<string> {
-    return this.request<string>('POST', `/nodes/${node}/qemu/${vmid}/snapshot/${snapname}/rollback`);
+    return this.request<string>(
+      'POST',
+      `/nodes/${node}/qemu/${vmid}/snapshot/${snapname}/rollback`,
+    );
   }
 
   async deleteSnapshot(node: string, vmid: number, snapname: string): Promise<string> {
@@ -316,13 +323,21 @@ export class ProxmoxApi {
   // ── Tasks ──
 
   async getTaskStatus(node: string, upid: string): Promise<PveTaskStatus> {
-    return this.request<PveTaskStatus>('GET', `/nodes/${node}/tasks/${encodeURIComponent(upid)}/status`);
+    return this.request<PveTaskStatus>(
+      'GET',
+      `/nodes/${node}/tasks/${encodeURIComponent(upid)}/status`,
+    );
   }
 
   /**
    * Wait for a task to complete.
    */
-  async waitForTask(node: string, upid: string, timeoutMs = 120000, pollIntervalMs = 2000): Promise<PveTaskStatus> {
+  async waitForTask(
+    node: string,
+    upid: string,
+    timeoutMs = 120000,
+    pollIntervalMs = 2000,
+  ): Promise<PveTaskStatus> {
     const start = Date.now();
 
     while (Date.now() - start < timeoutMs) {

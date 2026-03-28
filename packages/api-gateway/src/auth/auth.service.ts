@@ -187,10 +187,7 @@ export class AuthService {
       throw new UnauthorizedException('API key expired');
     }
 
-    await this.db
-      .update(apiKeys)
-      .set({ lastUsedAt: new Date() })
-      .where(eq(apiKeys.id, key.id));
+    await this.db.update(apiKeys).set({ lastUsedAt: new Date() }).where(eq(apiKeys.id, key.id));
 
     return {
       userId: key.userId,

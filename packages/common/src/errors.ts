@@ -148,11 +148,16 @@ export class RateLimitedError extends CloudifyError {
 
 export class QuotaExceededError extends CloudifyError {
   constructor(resourceType: string, limit: number, current: number) {
-    super(`Quota exceeded for ${resourceType}: limit ${limit}, current ${current}`, ErrorCode.QUOTA_EXCEEDED, 403, {
-      resourceType,
-      limit,
-      current,
-    });
+    super(
+      `Quota exceeded for ${resourceType}: limit ${limit}, current ${current}`,
+      ErrorCode.QUOTA_EXCEEDED,
+      403,
+      {
+        resourceType,
+        limit,
+        current,
+      },
+    );
     this.name = 'QuotaExceededError';
   }
 }
@@ -172,7 +177,11 @@ export class HypervisorError extends CloudifyError {
 }
 
 export class GitOpsError extends CloudifyError {
-  constructor(message: string, code: ErrorCodeValue = ErrorCode.GITOPS_REPO_ERROR, details?: Record<string, unknown>) {
+  constructor(
+    message: string,
+    code: ErrorCodeValue = ErrorCode.GITOPS_REPO_ERROR,
+    details?: Record<string, unknown>,
+  ) {
     super(message, code, 502, details);
     this.name = 'GitOpsError';
   }

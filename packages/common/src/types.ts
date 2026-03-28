@@ -1,10 +1,4 @@
-import {
-  TenantStatus,
-  UserRole,
-  ResourceType,
-  ResourceStatus,
-  AuditAction,
-} from './enums';
+import { TenantStatus, UserRole, ResourceType, ResourceStatus, AuditAction } from './enums';
 
 export interface Tenant {
   id: string;

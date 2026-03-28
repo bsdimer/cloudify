@@ -22,7 +22,13 @@ export const tenantStatusEnum = pgEnum('tenant_status', [
   'decommissioned',
 ]);
 
-export const userRoleEnum = pgEnum('user_role', ['super_admin', 'owner', 'admin', 'member', 'viewer']);
+export const userRoleEnum = pgEnum('user_role', [
+  'super_admin',
+  'owner',
+  'admin',
+  'member',
+  'viewer',
+]);
 
 export const resourceTypeEnum = pgEnum('resource_type', [
   'k8s_cluster',

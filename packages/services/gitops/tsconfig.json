@@ -6,8 +6,5 @@
     "composite": true
   },
   "include": ["src/**/*"],
-  "references": [
-    { "path": "../../common" },
-    { "path": "../nats" }
-  ]
+  "references": [{ "path": "../../common" }, { "path": "../nats" }]
 }

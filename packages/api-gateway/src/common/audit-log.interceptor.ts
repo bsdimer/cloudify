@@ -1,4 +1,11 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Inject, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+  Inject,
+  Logger,
+} from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
 import { Request } from 'express';
 import { DRIZZLE, type DrizzleDB } from '../database/database.module';
@@ -94,7 +101,14 @@ export class AuditLogInterceptor implements NestInterceptor {
     if (!body || typeof body !== 'object') return {};
 
     const sanitized = { ...body };
-    const sensitiveFields = ['password', 'ownerPassword', 'secret', 'token', 'refreshToken', 'apiKey'];
+    const sensitiveFields = [
+      'password',
+      'ownerPassword',
+      'secret',
+      'token',
+      'refreshToken',
+      'apiKey',
+    ];
     for (const field of sensitiveFields) {
       if (field in sanitized) {
         sanitized[field] = '[REDACTED]';

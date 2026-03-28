@@ -1,4 +1,10 @@
-import { connect, NatsConnection, JetStreamClient, JetStreamManager, ConnectionOptions } from 'nats';
+import {
+  connect,
+  NatsConnection,
+  JetStreamClient,
+  JetStreamManager,
+  ConnectionOptions,
+} from 'nats';
 import { createLogger, type StructuredLogger } from '@cloudify/common';
 
 const DEFAULT_NATS_URL = 'nats://localhost:4222';

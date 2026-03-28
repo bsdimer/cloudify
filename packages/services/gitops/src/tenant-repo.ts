@@ -197,7 +197,11 @@ export async function createTenantRepo(
 
   // Push template files
   const templateFiles = generateTemplateFiles(tenantSlug, tenantId, config);
-  await gitea.createFiles(repoName, templateFiles, `chore: initialize tenant infrastructure for ${tenantSlug}`);
+  await gitea.createFiles(
+    repoName,
+    templateFiles,
+    `chore: initialize tenant infrastructure for ${tenantSlug}`,
+  );
 
   logger.info(`Tenant repo initialized: ${repoName}`, { tenantId, cloneUrl: repo.clone_url });
 
@@ -219,7 +223,11 @@ export async function commitResourceChange(
   const filePath = `resources/${resourceType}/${resourceName}.tf`;
   const commitMessage = `feat: update ${resourceType}/${resourceName}`;
 
-  logger.info(`Committing resource change: ${filePath}`, { tenantSlug, resourceType, resourceName });
+  logger.info(`Committing resource change: ${filePath}`, {
+    tenantSlug,
+    resourceType,
+    resourceName,
+  });
 
   await gitea.createOrUpdateFile(repoName, filePath, tofuContent, commitMessage);
 }

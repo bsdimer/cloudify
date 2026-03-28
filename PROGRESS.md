@@ -3,7 +3,7 @@
 > Checklist tracker for the [Implementation Plan](PLAN.md).
 > Update statuses as work progresses. Each item maps to a section in `PLAN.md`.
 
-**Legend:**  `[ ]` Not started | `[~]` In progress | `[x]` Complete | `[-]` Skipped/Deferred
+**Legend:** `[ ]` Not started | `[~]` In progress | `[x]` Complete | `[-]` Skipped/Deferred
 
 **Last updated:** 2026-03-28
 
@@ -130,20 +130,21 @@
 
 ## Phase 0 Summary
 
-| Section | Status | Items | Done | Progress |
-|---------|--------|-------|------|----------|
-| 0.1 Developer Environment | ~Complete | 7 | 5 | 71% |
-| 0.2 Control-Plane Database | Complete | 15 | 15 | 100% |
-| 0.3 Authentication & Authorization | Complete | 9 | 9 | 100% |
-| 0.4 API Gateway | Complete | 13 | 12 | 92% |
-| 0.5 Tenant Lifecycle | Complete | 8 | 8 | 100% |
-| 0.6 GitOps Service | Complete | 12 | 12 | 100% |
-| 0.7 Event Bus | Complete | 8 | 8 | 100% |
-| 0.8 Hypervisor Abstraction | Complete | 8 | 8 | 100% |
-| 0.9 Common Package | Complete | 7 | 7 | 100% |
-| **Phase 0 Total** | | **87** | **84** | **97%** |
+| Section                            | Status    | Items  | Done   | Progress |
+| ---------------------------------- | --------- | ------ | ------ | -------- |
+| 0.1 Developer Environment          | ~Complete | 7      | 5      | 71%      |
+| 0.2 Control-Plane Database         | Complete  | 15     | 15     | 100%     |
+| 0.3 Authentication & Authorization | Complete  | 9      | 9      | 100%     |
+| 0.4 API Gateway                    | Complete  | 13     | 12     | 92%      |
+| 0.5 Tenant Lifecycle               | Complete  | 8      | 8      | 100%     |
+| 0.6 GitOps Service                 | Complete  | 12     | 12     | 100%     |
+| 0.7 Event Bus                      | Complete  | 8      | 8      | 100%     |
+| 0.8 Hypervisor Abstraction         | Complete  | 8      | 8      | 100%     |
+| 0.9 Common Package                 | Complete  | 7      | 7      | 100%     |
+| **Phase 0 Total**                  |           | **87** | **84** | **97%**  |
 
 Remaining Phase 0 items (non-blocking for Phase 1):
+
 - Conventional Commits + semantic-release
 - CONTRIBUTING.md
 
@@ -234,4 +235,4 @@ Remaining Phase 0 items (non-blocking for Phase 1):
 
 ---
 
-*Update this file as tasks are completed. Use `[~]` for in-progress items and `[x]` for done.*
+_Update this file as tasks are completed. Use `[~]` for in-progress items and `[x]` for done._

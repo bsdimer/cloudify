@@ -16,7 +16,10 @@ export interface ProviderFactoryConfig {
 }
 
 // Registry of provider constructors
-const providerRegistry = new Map<ProviderType, (config: Record<string, unknown>) => Promise<HypervisorProvider>>();
+const providerRegistry = new Map<
+  ProviderType,
+  (config: Record<string, unknown>) => Promise<HypervisorProvider>
+>();
 
 /**
  * Register a provider implementation.
@@ -42,7 +45,9 @@ export function registerProvider(
  *     },
  *   });
  */
-export async function createProvider(factoryConfig: ProviderFactoryConfig): Promise<HypervisorProvider> {
+export async function createProvider(
+  factoryConfig: ProviderFactoryConfig,
+): Promise<HypervisorProvider> {
   const factory = providerRegistry.get(factoryConfig.type);
 
   if (!factory) {

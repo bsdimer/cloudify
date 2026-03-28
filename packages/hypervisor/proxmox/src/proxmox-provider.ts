@@ -16,7 +16,13 @@ import type {
   PlacementDecision,
   PlacementConstraints,
 } from '@cloudify/hypervisor-core';
-import { ProxmoxApi, type ProxmoxConfig, type PveVm, type PveVmConfig, type PveNode } from './proxmox-api';
+import {
+  ProxmoxApi,
+  type ProxmoxConfig,
+  type PveVm,
+  type PveVmConfig,
+  type PveNode,
+} from './proxmox-api';
 import { createLogger } from '@cloudify/common';
 
 const logger = createLogger('ProxmoxProvider');
@@ -313,7 +319,10 @@ export class ProxmoxProvider implements HypervisorProvider {
 
   // ── Placement ──
 
-  async decidePlacement(spec: VmSpec, constraints?: PlacementConstraints): Promise<PlacementDecision> {
+  async decidePlacement(
+    spec: VmSpec,
+    constraints?: PlacementConstraints,
+  ): Promise<PlacementDecision> {
     const nodes = await this.listNodes();
     const onlineNodes = nodes.filter((n) => n.status === 'online');
 
@@ -339,7 +348,9 @@ export class ProxmoxProvider implements HypervisorProvider {
     });
 
     if (candidates.length === 0) {
-      throw new Error(`No nodes with sufficient capacity (need ${spec.cpus} CPU, ${spec.memoryMb}MB RAM)`);
+      throw new Error(
+        `No nodes with sufficient capacity (need ${spec.cpus} CPU, ${spec.memoryMb}MB RAM)`,
+      );
     }
 
     const strategy = constraints?.strategy || 'spread';
@@ -348,14 +359,10 @@ export class ProxmoxProvider implements HypervisorProvider {
 
     if (strategy === 'pack') {
       // Pack: choose the node with the least free resources (bin-packing)
-      selected = candidates.sort(
-        (a, b) => (a.cpuTotal - a.cpuUsed) - (b.cpuTotal - b.cpuUsed),
-      )[0];
+      selected = candidates.sort((a, b) => a.cpuTotal - a.cpuUsed - (b.cpuTotal - b.cpuUsed))[0];
     } else {
       // Spread: choose the node with the most free resources
-      selected = candidates.sort(
-        (a, b) => (b.cpuTotal - b.cpuUsed) - (a.cpuTotal - a.cpuUsed),
-      )[0];
+      selected = candidates.sort((a, b) => b.cpuTotal - b.cpuUsed - (a.cpuTotal - a.cpuUsed))[0];
     }
 
     return {
