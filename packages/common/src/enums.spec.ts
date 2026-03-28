@@ -16,6 +16,7 @@ describe('Enums', () => {
   });
 
   it('should define UserRole values', () => {
+    expect(UserRole.SUPER_ADMIN).toBe('super_admin');
     expect(UserRole.OWNER).toBe('owner');
     expect(UserRole.ADMIN).toBe('admin');
     expect(UserRole.MEMBER).toBe('member');

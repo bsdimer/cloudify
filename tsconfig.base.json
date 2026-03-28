@@ -17,10 +17,6 @@
     "incremental": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "paths": {
-      "@cloudify/common": ["packages/common/src/index.ts"],
-      "@cloudify/common/*": ["packages/common/src/*"]
-    },
     "baseUrl": "."
   },
   "exclude": ["node_modules", "dist"]

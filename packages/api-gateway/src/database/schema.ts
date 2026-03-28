@@ -22,7 +22,13 @@ export const tenantStatusEnum = pgEnum('tenant_status', [
   'decommissioned',
 ]);
 
-export const userRoleEnum = pgEnum('user_role', ['owner', 'admin', 'member', 'viewer']);
+export const userRoleEnum = pgEnum('user_role', [
+  'super_admin',
+  'owner',
+  'admin',
+  'member',
+  'viewer',
+]);
 
 export const resourceTypeEnum = pgEnum('resource_type', [
   'k8s_cluster',
@@ -276,6 +282,25 @@ export const auditLogs = pgTable(
     index('audit_logs_timestamp_idx').on(table.timestamp),
     index('audit_logs_tenant_timestamp_idx').on(table.tenantId, table.timestamp),
     index('audit_logs_correlation_id_idx').on(table.correlationId),
+  ],
+);
+
+// ── Revoked Tokens (for logout / token revocation) ──
+
+export const revokedTokens = pgTable(
+  'revoked_tokens',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    jti: varchar('jti', { length: 255 }).notNull().unique(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('revoked_tokens_jti_idx').on(table.jti),
+    index('revoked_tokens_expires_at_idx').on(table.expiresAt),
   ],
 );
 

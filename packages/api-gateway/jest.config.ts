@@ -10,6 +10,9 @@ const config: Config = {
   rootDir: '.',
   testMatch: ['<rootDir>/src/**/*.spec.ts', '<rootDir>/test/**/*.spec.ts'],
   passWithNoTests: true,
+  moduleNameMapper: {
+    '^@cloudify/common(.*)$': '<rootDir>/../common/src$1',
+  },
 };
 
 export default config;

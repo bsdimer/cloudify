@@ -11,14 +11,7 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import {
-  IsString,
-  MinLength,
-  MaxLength,
-  IsEmail,
-  Matches,
-  IsOptional,
-} from 'class-validator';
+import { IsString, MinLength, MaxLength, IsEmail, Matches, IsOptional } from 'class-validator';
 import { TenantsService } from './tenants.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -88,7 +81,7 @@ export class TenantsController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get current user\'s tenant' })
+  @ApiOperation({ summary: "Get current user's tenant" })
   async findMyTenant(@CurrentUser() user: RequestUser) {
     return this.tenantsService.findById(user.tenantId);
   }
