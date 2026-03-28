@@ -3,6 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from './decorators';
 
 const ROLE_HIERARCHY: Record<string, number> = {
+  super_admin: 5,
   owner: 4,
   admin: 3,
   member: 2,
@@ -26,6 +27,11 @@ export class RolesGuard implements CanActivate {
     const { user } = context.switchToHttp().getRequest();
     if (!user) {
       throw new ForbiddenException('No user context');
+    }
+
+    // super_admin bypasses all role checks
+    if (user.role === 'super_admin') {
+      return true;
     }
 
     const userLevel = ROLE_HIERARCHY[user.role] ?? 0;

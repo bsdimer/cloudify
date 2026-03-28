@@ -57,7 +57,7 @@ async function seed() {
       email: 'admin@cloudify.local',
       passwordHash,
       tenantId: adminTenant.id,
-      role: 'owner',
+      role: 'super_admin',
     })
     .returning();
 

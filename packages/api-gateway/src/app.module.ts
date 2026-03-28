@@ -1,12 +1,16 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { HealthModule } from './health/health.module';
+import { EventsModule } from './events/events.module';
 import { CorrelationIdMiddleware } from './common/correlation-id.middleware';
 import { IdempotencyMiddleware } from './common/idempotency.middleware';
+import { GlobalExceptionFilter } from './common/global-exception.filter';
+import { AuditLogInterceptor } from './common/audit-log.interceptor';
 
 @Module({
   imports: [
@@ -30,6 +34,17 @@ import { IdempotencyMiddleware } from './common/idempotency.middleware';
     AuthModule,
     TenantsModule,
     HealthModule,
+    EventsModule,
+  ],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditLogInterceptor,
+    },
   ],
 })
 export class AppModule implements NestModule {

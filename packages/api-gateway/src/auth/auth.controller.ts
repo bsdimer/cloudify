@@ -2,7 +2,7 @@ import { Controller, Post, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { IsEmail, IsString, MinLength, IsArray, IsOptional } from 'class-validator';
 import { AuthService } from './auth.service';
-import { Public, CurrentUser, type RequestUser } from './decorators';
+import { Public, CurrentUser } from './decorators';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 class LoginBodyDto {
@@ -33,6 +33,15 @@ class CreateApiKeyBodyDto {
   expiresAt?: string;
 }
 
+interface AuthenticatedUser {
+  userId: string;
+  email: string;
+  tenantId: string;
+  role: string;
+  jti?: string;
+  exp?: number;
+}
+
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
@@ -55,10 +64,22 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout and revoke current token' })
+  async logout(@CurrentUser() user: AuthenticatedUser) {
+    if (user.jti && user.exp) {
+      await this.authService.logout(user.jti, user.userId, user.exp);
+    }
+    return { message: 'Logged out successfully' };
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('api-keys')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new API key' })
-  async createApiKey(@CurrentUser() user: RequestUser, @Body() body: CreateApiKeyBodyDto) {
+  async createApiKey(@CurrentUser() user: AuthenticatedUser, @Body() body: CreateApiKeyBodyDto) {
     return this.authService.createApiKey(user.userId, user.tenantId, body.name, body.scopes);
   }
 }

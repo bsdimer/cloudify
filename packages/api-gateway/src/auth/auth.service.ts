@@ -1,11 +1,11 @@
 import { Injectable, Inject, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { eq } from 'drizzle-orm';
+import { eq, and, gt, lt } from 'drizzle-orm';
 import * as bcrypt from 'bcryptjs';
 import { DRIZZLE, type DrizzleDB } from '../database/database.module';
-import { users, apiKeys } from '../database/schema';
-import { createHash, randomBytes } from 'crypto';
+import { users, apiKeys, revokedTokens } from '../database/schema';
+import { createHash, randomBytes, randomUUID } from 'crypto';
 
 const REFRESH_TOKEN_EXPIRY = 604800; // 7 days in seconds
 
@@ -38,12 +38,15 @@ export class AuthService {
       email: user.email,
       tenantId: user.tenantId,
       role: user.role,
+      jti: randomUUID(),
     };
   }
 
   private signTokens(payload: Record<string, unknown>) {
     const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, {
+
+    const refreshPayload = { ...payload, jti: randomUUID(), type: 'refresh' };
+    const refreshToken = this.jwtService.sign(refreshPayload, {
       expiresIn: REFRESH_TOKEN_EXPIRY,
     });
 
@@ -64,21 +67,82 @@ export class AuthService {
     try {
       const decoded = this.jwtService.verify(refreshToken);
 
-      const [user] = await this.db
-        .select()
-        .from(users)
-        .where(eq(users.id, decoded.sub))
-        .limit(1);
+      // Check if the refresh token has been revoked
+      if (decoded.jti) {
+        const [revoked] = await this.db
+          .select()
+          .from(revokedTokens)
+          .where(eq(revokedTokens.jti, decoded.jti))
+          .limit(1);
+
+        if (revoked) {
+          throw new UnauthorizedException('Token has been revoked');
+        }
+      }
+
+      const [user] = await this.db.select().from(users).where(eq(users.id, decoded.sub)).limit(1);
 
       if (!user) {
         throw new UnauthorizedException('User not found');
       }
 
+      // Revoke the old refresh token (rotate)
+      if (decoded.jti) {
+        await this.db
+          .insert(revokedTokens)
+          .values({
+            jti: decoded.jti,
+            userId: decoded.sub as string,
+            expiresAt: new Date(decoded.exp * 1000),
+          })
+          .onConflictDoNothing();
+      }
+
       const payload = this.buildTokenPayload(user);
       return this.signTokens(payload);
-    } catch {
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
       throw new UnauthorizedException('Invalid refresh token');
     }
+  }
+
+  /**
+   * Logout — revoke the current access token and refresh token.
+   */
+  async logout(accessTokenJti: string, userId: string, tokenExp: number) {
+    await this.db
+      .insert(revokedTokens)
+      .values({
+        jti: accessTokenJti,
+        userId,
+        expiresAt: new Date(tokenExp * 1000),
+      })
+      .onConflictDoNothing();
+  }
+
+  /**
+   * Check if a token JTI has been revoked.
+   */
+  async isTokenRevoked(jti: string): Promise<boolean> {
+    const [revoked] = await this.db
+      .select()
+      .from(revokedTokens)
+      .where(and(eq(revokedTokens.jti, jti), gt(revokedTokens.expiresAt, new Date())))
+      .limit(1);
+
+    return !!revoked;
+  }
+
+  /**
+   * Cleanup expired revoked tokens (run periodically).
+   */
+  async cleanupRevokedTokens(): Promise<number> {
+    const result = await this.db
+      .delete(revokedTokens)
+      .where(lt(revokedTokens.expiresAt, new Date()))
+      .returning();
+
+    return result.length;
   }
 
   async hashPassword(password: string): Promise<string> {
@@ -113,11 +177,7 @@ export class AuthService {
   async validateApiKey(rawKey: string) {
     const keyHash = createHash('sha256').update(rawKey).digest('hex');
 
-    const [key] = await this.db
-      .select()
-      .from(apiKeys)
-      .where(eq(apiKeys.keyHash, keyHash))
-      .limit(1);
+    const [key] = await this.db.select().from(apiKeys).where(eq(apiKeys.keyHash, keyHash)).limit(1);
 
     if (!key) {
       throw new UnauthorizedException('Invalid API key');

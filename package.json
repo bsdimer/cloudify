@@ -53,10 +53,14 @@
     "helmet": "^8.1.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
+    "passport-custom": "^1.1.1",
     "passport-local": "^1.0.0",
     "postgres": "^3.4.8",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "@nestjs/platform-socket.io": "^11.1.17",
+    "@nestjs/websockets": "^11.1.17",
+    "socket.io": "^4.7.5",
     "swagger-ui-express": "^5.0.1",
     "zod": "^4.3.6"
   }
