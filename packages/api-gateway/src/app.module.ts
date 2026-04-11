@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { HealthModule } from './health/health.module';
 import { EventsModule } from './events/events.module';
+import { IamModule } from './iam/iam.module';
 import { CorrelationIdMiddleware } from './common/correlation-id.middleware';
 import { IdempotencyMiddleware } from './common/idempotency.middleware';
 import { GlobalExceptionFilter } from './common/global-exception.filter';
@@ -35,6 +36,7 @@ import { AuditLogInterceptor } from './common/audit-log.interceptor';
     TenantsModule,
     HealthModule,
     EventsModule,
+    IamModule,
   ],
   providers: [
     {

@@ -7,9 +7,12 @@ import {
   quotas,
   billingAccounts,
   auditLogs,
+  iamRoles,
+  userIamRoles,
   type resourceTypeEnum,
 } from '../database/schema';
 import { AuthService } from '../auth/auth.service';
+import { BUILT_IN_ROLES } from '@cloudify/common';
 
 type ResourceTypeValue = (typeof resourceTypeEnum.enumValues)[number];
 type TenantStatusValue = 'active' | 'suspended' | 'pending' | 'decommissioned';
@@ -94,6 +97,32 @@ export class TenantsService {
       await tx.insert(billingAccounts).values({
         tenantId: tenant.id,
       });
+
+      // Seed built-in IAM roles and assign tenant-admin to owner
+      const seededRoles: { id: string; name: string }[] = [];
+      for (const [, roleDef] of Object.entries(BUILT_IN_ROLES)) {
+        const [role] = await tx
+          .insert(iamRoles)
+          .values({
+            tenantId: tenant.id,
+            name: roleDef.name,
+            description: roleDef.description,
+            permissions: roleDef.permissions,
+            builtIn: true,
+          })
+          .returning();
+        seededRoles.push({ id: role.id, name: role.name });
+      }
+
+      // Assign tenant-admin role to the owner
+      const adminRole = seededRoles.find((r) => r.name === 'tenant-admin');
+      if (adminRole) {
+        await tx.insert(userIamRoles).values({
+          userId: owner.id,
+          iamRoleId: adminRole.id,
+          assignedBy: owner.id,
+        });
+      }
 
       await tx.insert(auditLogs).values({
         tenantId: tenant.id,

@@ -4,8 +4,9 @@ import { ConfigService } from '@nestjs/config';
 import { eq, and, gt, lt } from 'drizzle-orm';
 import * as bcrypt from 'bcryptjs';
 import { DRIZZLE, type DrizzleDB } from '../database/database.module';
-import { users, apiKeys, revokedTokens } from '../database/schema';
+import { users, apiKeys, revokedTokens, userIamRoles, iamRoles } from '../database/schema';
 import { createHash, randomBytes, randomUUID } from 'crypto';
+import type { IamPermission } from '@cloudify/common';
 
 const REFRESH_TOKEN_EXPIRY = 604800; // 7 days in seconds
 
@@ -32,12 +33,30 @@ export class AuthService {
     return user;
   }
 
-  private buildTokenPayload(user: { id: string; email: string; tenantId: string; role: string }) {
+  private async getUserPermissions(userId: string): Promise<IamPermission[]> {
+    const roles = await this.db
+      .select({ permissions: iamRoles.permissions })
+      .from(userIamRoles)
+      .innerJoin(iamRoles, eq(userIamRoles.iamRoleId, iamRoles.id))
+      .where(eq(userIamRoles.userId, userId));
+
+    return roles.flatMap((r) => r.permissions) as IamPermission[];
+  }
+
+  private async buildTokenPayload(user: {
+    id: string;
+    email: string;
+    tenantId: string;
+    role: string;
+  }) {
+    const permissions = await this.getUserPermissions(user.id);
+
     return {
       sub: user.id,
       email: user.email,
       tenantId: user.tenantId,
       role: user.role,
+      permissions,
       jti: randomUUID(),
     };
   }
@@ -59,7 +78,7 @@ export class AuthService {
 
   async login(email: string, password: string) {
     const user = await this.validateUser(email, password);
-    const payload = this.buildTokenPayload(user);
+    const payload = await this.buildTokenPayload(user);
     return this.signTokens(payload);
   }
 
@@ -98,7 +117,7 @@ export class AuthService {
           .onConflictDoNothing();
       }
 
-      const payload = this.buildTokenPayload(user);
+      const payload = await this.buildTokenPayload(user);
       return this.signTokens(payload);
     } catch (error) {
       if (error instanceof UnauthorizedException) throw error;
