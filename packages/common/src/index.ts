@@ -7,3 +7,5 @@ export * from './pagination';
 export * from './logger';
 export * from './retry';
 export * from './idempotency';
+export * from './compute';
+export * from './networking';

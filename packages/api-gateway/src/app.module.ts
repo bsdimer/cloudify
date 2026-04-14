@@ -8,6 +8,11 @@ import { TenantsModule } from './tenants/tenants.module';
 import { HealthModule } from './health/health.module';
 import { EventsModule } from './events/events.module';
 import { IamModule } from './iam/iam.module';
+import { ComputeModule } from './compute/compute.module';
+import { KubernetesModule } from './kubernetes/kubernetes.module';
+import { NetworkingModule } from './networking/networking.module';
+import { IpamModule } from './ipam/ipam.module';
+import { LoadBalancerModule } from './load-balancer/load-balancer.module';
 import { CorrelationIdMiddleware } from './common/correlation-id.middleware';
 import { IdempotencyMiddleware } from './common/idempotency.middleware';
 import { GlobalExceptionFilter } from './common/global-exception.filter';
@@ -37,6 +42,11 @@ import { AuditLogInterceptor } from './common/audit-log.interceptor';
     HealthModule,
     EventsModule,
     IamModule,
+    ComputeModule,
+    KubernetesModule,
+    NetworkingModule,
+    IpamModule,
+    LoadBalancerModule,
   ],
   providers: [
     {

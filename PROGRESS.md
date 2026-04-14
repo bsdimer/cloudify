@@ -183,84 +183,127 @@ Remaining Phase 0 items (non-blocking for Phase 1):
 
 ### 1.1 Proxmox Integration Layer (via Hypervisor Abstraction)
 
-- [ ] Proxmox VE REST API client (TypeScript, fully typed)
-- [ ] Authentication (API token / ticket)
-- [ ] Create QEMU VM
-- [ ] Start / stop / restart VM
-- [ ] Destroy VM
-- [ ] Clone VM from template
-- [ ] Resize VM (CPU, RAM, disk)
-- [ ] Snapshot VM
-- [ ] Restore VM from snapshot
-- [ ] Migrate VM between nodes
-- [ ] Query node capacity and health
-- [ ] LXC container support (optional)
-- [ ] Node pool / cluster discovery
-- [ ] Placement scheduler (capacity-based, affinity/anti-affinity)
-- [ ] VM image catalog (Ubuntu, Debian, etc.)
+- [x] Proxmox VE REST API client (TypeScript, fully typed) — completed in Phase 0
+- [x] Authentication (API token / ticket) — completed in Phase 0
+- [x] Create QEMU VM — completed in Phase 0
+- [x] Start / stop / restart VM — completed in Phase 0
+- [x] Destroy VM — completed in Phase 0
+- [x] Clone VM from template — completed in Phase 0
+- [x] Resize VM (CPU, RAM, disk) — completed in Phase 0
+- [x] Snapshot VM — completed in Phase 0
+- [x] Restore VM from snapshot — completed in Phase 0
+- [x] Migrate VM between nodes — completed in Phase 0
+- [x] Query node capacity and health — completed in Phase 0
+- [-] LXC container support (optional) — deferred
+- [x] Node pool / cluster discovery — completed in Phase 0
+- [x] Placement scheduler (capacity-based, affinity/anti-affinity) — completed in Phase 0
+- [x] VM image catalog (Ubuntu, Debian, etc.) — `DEFAULT_VM_IMAGES` in common package
 
-### 1.2 Managed Kubernetes Service
+### 1.2 Compute Service (VM Orchestration)
 
-- [ ] K8s cluster resource definition (API schema)
-- [ ] Control plane VM provisioning (1 or 3 for HA)
-- [ ] Worker node VM provisioning (N nodes)
+- [x] VM resource CRUD via REST API (`POST/GET/PATCH/DELETE /compute/vms`)
+- [x] VM actions endpoint (start/stop/restart) — `POST /compute/vms/:id/action`
+- [x] VM resize endpoint — `PATCH /compute/vms/:id/resize`
+- [x] VM snapshot create/restore endpoints
+- [x] Quota enforcement on VM creation
+- [x] Audit logging for all VM operations
+- [x] IAM permission integration (`compute:create`, `compute:read`, etc.)
+
+### 1.3 Managed Kubernetes Service
+
+- [x] K8s cluster resource definition (API schema + DB table)
+- [x] `k8s_clusters` database table with full cluster metadata
+- [x] K8s version catalog (`SUPPORTED_K8S_VERSIONS`)
+- [x] Create cluster endpoint — `POST /kubernetes/clusters`
+- [x] List/get cluster endpoints
+- [x] Scale nodes (add/remove workers) — `PATCH /kubernetes/clusters/:id/scale`
+- [x] Upgrade K8s version — `PATCH /kubernetes/clusters/:id/upgrade`
+- [x] Delete cluster — `DELETE /kubernetes/clusters/:id`
+- [x] Quota enforcement and audit logging
+- [ ] Control plane VM provisioning (1 or 3 for HA) — async via event bus
+- [ ] Worker node VM provisioning (N nodes) — async via event bus
 - [ ] Cloud-init / Ansible bootstrap scripts (kubeadm)
 - [ ] CNI installation (Cilium)
 - [ ] CSI driver setup (Proxmox storage)
 - [ ] Kubeconfig generation + storage in secrets service
 - [ ] Cluster health probe registration
-- [ ] Scale nodes (add/remove workers)
-- [ ] Upgrade K8s version (rolling upgrade)
-- [ ] Delete cluster (full teardown)
-- [ ] Multi-version K8s support (version catalog)
+- [ ] Multi-version K8s support (tested images per version)
 - [ ] Node pool concept (different sizes in one cluster)
 - [ ] OpenTofu module: `k8s-cluster`
 
-### 1.3 Software-Defined Networking (SDN)
+### 1.4 Software-Defined Networking (SDN)
 
-- [ ] OVN/Proxmox SDN integration research & PoC
-- [ ] Tenant VPC creation (logical container)
-- [ ] Subnet creation (mapped to OVN logical switch)
-- [ ] Logical router per tenant
-- [ ] Inter-tenant traffic blocked by default
+- [x] VPC database schema + CRUD API (`POST/GET/DELETE /networking/vpcs`)
+- [x] Subnet database schema + CRUD API (`POST/GET/DELETE /networking/subnets`)
+- [x] Security Groups with rule management (`POST/GET/PATCH/DELETE /networking/security-groups`)
+- [x] CIDR validation and subnet-within-VPC validation
+- [x] IAM permission integration (`network:create`, `network:read`, etc.)
+- [x] Audit logging for all networking operations
+- [ ] OVN/Proxmox SDN integration (logical router/switch creation)
 - [ ] NAT gateway per tenant (outbound internet)
-- [ ] Security Groups (L3/L4 OVN ACLs) — see also Firewall section below
 - [ ] Floating IP (DNAT on logical router)
 - [ ] Network peering (cross-tenant, explicit opt-in)
 - [ ] Default Cilium network policies for managed K8s clusters
 - [ ] OpenTofu module: `sdn-network`
 
-### 1.4 IP Address Management (IPAM)
+### 1.5 IP Address Management (IPAM)
 
-- [ ] IP pool database schema
-- [ ] Pool → subnet → allocation tracking
-- [ ] `POST /api/v1/ips/allocate`
-- [ ] `POST /api/v1/ips/release`
-- [ ] `POST /api/v1/ips/assign` (floating IP → resource)
-- [ ] IPv4 support
+- [x] IP pool database schema + admin CRUD API
+- [x] IP allocation tracking (pool → tenant → resource)
+- [x] `POST /ips/allocate` — allocate IP from pool
+- [x] `POST /ips/release/:id` — release allocated IP
+- [x] `POST /ips/assign/:id` — assign floating IP to resource
+- [x] IPv4 support with CIDR-based allocation
+- [x] Floating IP lifecycle (allocate → assign → release)
+- [x] Ephemeral IP lifecycle
 - [ ] IPv6 prefix delegation support
-- [ ] Floating IP lifecycle
-- [ ] Ephemeral IP lifecycle
 
-### 1.5 Load Balancers — External (ISP Edge)
+### 1.6 Load Balancers — External (ISP Edge)
 
+- [x] Load balancer database schema + CRUD API (`POST/GET/PATCH/DELETE /load-balancers`)
+- [x] HAProxy configuration generation (`generateHaproxyConfig()`)
+- [x] L4 load balancing (TCP mode)
+- [x] L7 load balancing (HTTP/HTTPS mode)
+- [x] Health checks for backends (TCP and HTTP)
+- [x] Backend management (add/remove/update backends)
+- [x] Load balancing algorithms (roundrobin, leastconn, source)
+- [x] IAM permission integration and audit logging
 - [ ] Keepalived setup (VRRP, virtual IP failover)
-- [ ] HAProxy configuration generation
 - [ ] HAProxy config push (Data Plane API or file + reload)
 - [ ] Real client IP preservation (PROXY protocol)
-- [ ] L4 load balancing
-- [ ] L7 load balancing (HTTP/HTTPS)
-- [ ] Health checks for backends
 - [ ] Multi-node HA (Keepalived across LB nodes)
-- [ ] Coraza WAF SPOE integration on HAProxy (see Firewall section)
-- [ ] CrowdSec agent + bouncer on LB nodes (see Firewall section)
+- [ ] Coraza WAF SPOE integration on HAProxy
+- [ ] CrowdSec agent + bouncer on LB nodes
 
-### 1.6 Load Balancers — Per-Tenant (Inside K8s)
+### 1.7 Load Balancers — Per-Tenant (Inside K8s)
 
 - [ ] MetalLB or kube-vip deployment in tenant clusters
 - [ ] IP allocation from tenant's public sub-pool
 - [ ] Integration with external HAProxy for ingress routing
 - [ ] OpenTofu module: `lb-service`
+
+---
+
+## Phase 1 Summary
+
+| Section                 | Status      | Items  | Done   | Progress |
+| ----------------------- | ----------- | ------ | ------ | -------- |
+| 1.1 Proxmox Integration | Complete    | 15     | 14     | 93%      |
+| 1.2 Compute Service     | Complete    | 7      | 7      | 100%     |
+| 1.3 Managed Kubernetes  | In Progress | 19     | 9      | 47%      |
+| 1.4 SDN/Networking      | In Progress | 12     | 6      | 50%      |
+| 1.5 IPAM                | ~Complete   | 9      | 8      | 89%      |
+| 1.6 LB — External       | In Progress | 14     | 8      | 57%      |
+| 1.7 LB — Per-Tenant     | Not Started | 4      | 0      | 0%       |
+| **Phase 1 Total**       |             | **80** | **52** | **65%**  |
+
+Remaining Phase 1 items (require infrastructure — Proxmox, OVN, K8s clusters):
+
+- K8s cluster VM provisioning + kubeadm bootstrap (async workers)
+- OVN integration for SDN (logical routers, switches, NAT)
+- HAProxy Data Plane API push and Keepalived setup
+- IPv6 prefix delegation
+- MetalLB/kube-vip deployment
 
 ---
 
