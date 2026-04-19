@@ -9,3 +9,4 @@ export * from './retry';
 export * from './idempotency';
 export * from './compute';
 export * from './networking';
+export * from './managed-services';

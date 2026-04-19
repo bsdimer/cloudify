@@ -786,3 +786,262 @@ export const k8sClusters = pgTable(
     index('k8s_clusters_status_idx').on(table.status),
   ],
 );
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Phase 2 — Managed Services (Postgres, MongoDB, Valkey, MinIO)
+// ══════════════════════════════════════════════════════════════════════════════
+
+export const managedServiceStatusEnum = pgEnum('managed_service_status', [
+  'provisioning',
+  'active',
+  'updating',
+  'backing_up',
+  'restoring',
+  'failing_over',
+  'deleting',
+  'deleted',
+  'error',
+]);
+
+export const valkeyModeEnum = pgEnum('valkey_mode', ['standalone', 'cluster']);
+export const valkeyPersistenceEnum = pgEnum('valkey_persistence', [
+  'none',
+  'rdb',
+  'aof',
+  'rdb-aof',
+]);
+
+export const bucketAccessEnum = pgEnum('bucket_access', [
+  'private',
+  'public-read',
+  'public-read-write',
+]);
+
+export const bucketVersioningEnum = pgEnum('bucket_versioning', [
+  'enabled',
+  'suspended',
+  'disabled',
+]);
+
+// ── Managed PostgreSQL Instances ──
+
+export const postgresInstances = pgTable(
+  'postgres_instances',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 255 }).notNull(),
+    version: varchar('version', { length: 10 }).notNull(),
+    size: varchar('size', { length: 20 }).notNull(),
+    status: managedServiceStatusEnum('status').notNull().default('provisioning'),
+    readReplicas: smallint('read_replicas').notNull().default(0),
+    highAvailability: boolean('high_availability').notNull().default(false),
+    publicAccess: boolean('public_access').notNull().default(false),
+    connectionPooling: boolean('connection_pooling').notNull().default(false),
+    storageGb: integer('storage_gb').notNull(),
+    connectionEndpoint: varchar('connection_endpoint', { length: 512 }),
+    readEndpoint: varchar('read_endpoint', { length: 512 }),
+    port: integer('port').notNull().default(5432),
+    backupPolicy: jsonb('backup_policy')
+      .$type<{
+        enabled: boolean;
+        scheduleCron?: string;
+        retentionDays: number;
+        pointInTimeRecovery?: boolean;
+      }>()
+      .notNull(),
+    credentialsSecretRef: varchar('credentials_secret_ref', { length: 512 }),
+    vpcId: uuid('vpc_id').references(() => vpcs.id, { onDelete: 'set null' }),
+    tags: jsonb('tags').$type<Record<string, string>>().notNull().default({}),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index('postgres_tenant_id_idx').on(table.tenantId),
+    uniqueIndex('postgres_tenant_name_idx').on(table.tenantId, table.name),
+    index('postgres_status_idx').on(table.status),
+  ],
+);
+
+// ── Managed MongoDB Instances ──
+
+export const mongodbInstances = pgTable(
+  'mongodb_instances',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 255 }).notNull(),
+    version: varchar('version', { length: 10 }).notNull(),
+    size: varchar('size', { length: 20 }).notNull(),
+    status: managedServiceStatusEnum('status').notNull().default('provisioning'),
+    replicaSetSize: smallint('replica_set_size').notNull().default(3),
+    publicAccess: boolean('public_access').notNull().default(false),
+    storageGb: integer('storage_gb').notNull(),
+    connectionUri: varchar('connection_uri', { length: 1024 }),
+    port: integer('port').notNull().default(27017),
+    backupPolicy: jsonb('backup_policy')
+      .$type<{
+        enabled: boolean;
+        scheduleCron?: string;
+        retentionDays: number;
+      }>()
+      .notNull(),
+    credentialsSecretRef: varchar('credentials_secret_ref', { length: 512 }),
+    vpcId: uuid('vpc_id').references(() => vpcs.id, { onDelete: 'set null' }),
+    tags: jsonb('tags').$type<Record<string, string>>().notNull().default({}),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index('mongodb_tenant_id_idx').on(table.tenantId),
+    uniqueIndex('mongodb_tenant_name_idx').on(table.tenantId, table.name),
+    index('mongodb_status_idx').on(table.status),
+  ],
+);
+
+// ── Managed Valkey Instances ──
+
+export const valkeyInstances = pgTable(
+  'valkey_instances',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 255 }).notNull(),
+    version: varchar('version', { length: 10 }).notNull(),
+    size: varchar('size', { length: 20 }).notNull(),
+    status: managedServiceStatusEnum('status').notNull().default('provisioning'),
+    mode: valkeyModeEnum('mode').notNull().default('standalone'),
+    persistence: valkeyPersistenceEnum('persistence').notNull().default('rdb'),
+    evictionPolicy: varchar('eviction_policy', { length: 32 }).notNull().default('noeviction'),
+    clusterShards: smallint('cluster_shards').notNull().default(1),
+    replicasPerShard: smallint('replicas_per_shard').notNull().default(0),
+    memoryMb: integer('memory_mb').notNull(),
+    passwordEnabled: boolean('password_enabled').notNull().default(true),
+    publicAccess: boolean('public_access').notNull().default(false),
+    connectionEndpoint: varchar('connection_endpoint', { length: 512 }),
+    port: integer('port').notNull().default(6379),
+    credentialsSecretRef: varchar('credentials_secret_ref', { length: 512 }),
+    vpcId: uuid('vpc_id').references(() => vpcs.id, { onDelete: 'set null' }),
+    tags: jsonb('tags').$type<Record<string, string>>().notNull().default({}),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index('valkey_tenant_id_idx').on(table.tenantId),
+    uniqueIndex('valkey_tenant_name_idx').on(table.tenantId, table.name),
+    index('valkey_status_idx').on(table.status),
+  ],
+);
+
+// ── Object Storage (MinIO) Buckets ──
+
+export const buckets = pgTable(
+  'buckets',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 128 }).notNull(),
+    access: bucketAccessEnum('access').notNull().default('private'),
+    versioning: bucketVersioningEnum('versioning').notNull().default('disabled'),
+    quotaGb: integer('quota_gb'),
+    usedBytes: numeric('used_bytes', { precision: 20, scale: 0 }).notNull().default('0'),
+    objectCount: integer('object_count').notNull().default(0),
+    lifecycleRules: jsonb('lifecycle_rules')
+      .$type<
+        Array<{
+          id: string;
+          enabled: boolean;
+          prefix?: string;
+          expirationDays?: number;
+          transitionDays?: number;
+          transitionStorageClass?: string;
+        }>
+      >()
+      .notNull()
+      .default([]),
+    endpoint: varchar('endpoint', { length: 512 }),
+    region: varchar('region', { length: 64 }).notNull().default('us-east-1'),
+    status: managedServiceStatusEnum('status').notNull().default('provisioning'),
+    tags: jsonb('tags').$type<Record<string, string>>().notNull().default({}),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index('buckets_tenant_id_idx').on(table.tenantId),
+    uniqueIndex('buckets_name_idx').on(table.name),
+  ],
+);
+
+// ── Bucket Access Keys ──
+
+export const bucketAccessKeys = pgTable(
+  'bucket_access_keys',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    bucketId: uuid('bucket_id')
+      .notNull()
+      .references(() => buckets.id, { onDelete: 'cascade' }),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 255 }).notNull(),
+    accessKey: varchar('access_key', { length: 128 }).notNull().unique(),
+    secretKeyHash: text('secret_key_hash').notNull(),
+    readOnly: boolean('read_only').notNull().default(false),
+    prefixRestriction: varchar('prefix_restriction', { length: 512 }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('bucket_access_keys_bucket_id_idx').on(table.bucketId),
+    index('bucket_access_keys_tenant_id_idx').on(table.tenantId),
+    index('bucket_access_keys_access_key_idx').on(table.accessKey),
+  ],
+);
+
+// ── Managed Service Backups ──
+
+export const managedServiceBackups = pgTable(
+  'managed_service_backups',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    serviceType: varchar('service_type', { length: 20 }).notNull(), // 'postgres' | 'mongodb' | 'valkey'
+    instanceId: uuid('instance_id').notNull(),
+    name: varchar('name', { length: 255 }).notNull(),
+    type: varchar('type', { length: 20 }).notNull().default('automated'), // 'automated' | 'manual' | 'pitr'
+    sizeBytes: numeric('size_bytes', { precision: 20, scale: 0 }).notNull().default('0'),
+    storageLocation: varchar('storage_location', { length: 1024 }),
+    status: varchar('status', { length: 20 }).notNull().default('creating'),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('backups_tenant_id_idx').on(table.tenantId),
+    index('backups_instance_idx').on(table.serviceType, table.instanceId),
+    index('backups_created_at_idx').on(table.createdAt),
+  ],
+);

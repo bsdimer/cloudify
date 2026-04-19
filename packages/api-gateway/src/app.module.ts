@@ -13,6 +13,8 @@ import { KubernetesModule } from './kubernetes/kubernetes.module';
 import { NetworkingModule } from './networking/networking.module';
 import { IpamModule } from './ipam/ipam.module';
 import { LoadBalancerModule } from './load-balancer/load-balancer.module';
+import { DatabasesModule } from './databases/databases.module';
+import { ObjectStorageModule } from './object-storage/object-storage.module';
 import { CorrelationIdMiddleware } from './common/correlation-id.middleware';
 import { IdempotencyMiddleware } from './common/idempotency.middleware';
 import { GlobalExceptionFilter } from './common/global-exception.filter';
@@ -47,6 +49,8 @@ import { AuditLogInterceptor } from './common/audit-log.interceptor';
     NetworkingModule,
     IpamModule,
     LoadBalancerModule,
+    DatabasesModule,
+    ObjectStorageModule,
   ],
   providers: [
     {

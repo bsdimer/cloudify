@@ -307,4 +307,111 @@ Remaining Phase 1 items (require infrastructure — Proxmox, OVN, K8s clusters):
 
 ---
 
+## Phase 2 — Managed Services (Weeks 19–28)
+
+### 2.1 Managed PostgreSQL
+
+- [x] Postgres instance database schema (`postgres_instances` table)
+- [x] Version catalog (`SUPPORTED_POSTGRES_VERSIONS`: 16, 15, 14, 13)
+- [x] Instance size catalog (`INSTANCE_SIZES`: nano → xxlarge)
+- [x] Create/list/get instance endpoints (`POST/GET /databases/postgres`)
+- [x] Scale instance (size, read replicas, storage) — `PATCH /databases/postgres/:id/scale`
+- [x] Backup policy configuration (schedule, retention, PITR)
+- [x] Manual backup creation — `POST /databases/postgres/:id/backups`
+- [x] List backups — `GET /databases/postgres/:id/backups`
+- [x] Restore from backup — `POST /databases/postgres/:id/restore`
+- [x] Delete instance — `DELETE /databases/postgres/:id`
+- [x] IAM integration (`database:*` permissions)
+- [x] Audit logging for all operations
+- [x] Read replica configuration (0–5)
+- [x] High availability flag
+- [x] Connection pooling (PgBouncer) flag
+- [x] VPC attachment (private network)
+- [ ] CloudNativePG operator integration (async worker)
+- [ ] Kubeconfig/credentials stored in secrets service
+- [ ] WAL-G backup to MinIO/S3 integration
+- [ ] Prometheus monitoring integration
+- [ ] Patroni failover configuration
+
+### 2.2 Managed MongoDB
+
+- [x] MongoDB instance database schema (`mongodb_instances` table)
+- [x] Version catalog (`SUPPORTED_MONGODB_VERSIONS`: 7.0, 6.0, 5.0)
+- [x] Replica set size validation (1, 3, 5)
+- [x] Create/list/get/delete endpoints
+- [x] Backup creation and listing (`managed_service_backups` unified table)
+- [x] Backup policy configuration
+- [x] IAM integration and audit logging
+- [x] VPC attachment
+- [ ] MongoDB Community Operator integration (async worker)
+- [ ] mongodump → MinIO backup pipeline
+- [ ] MongoDB Exporter → Prometheus integration
+
+### 2.3 Managed Valkey (Redis-Compatible)
+
+- [x] Valkey instance database schema (`valkey_instances` table)
+- [x] Version catalog (`SUPPORTED_VALKEY_VERSIONS`: 8.0, 7.2)
+- [x] Mode: standalone / cluster
+- [x] Persistence: none / rdb / aof / rdb-aof
+- [x] 8 eviction policies supported
+- [x] Cluster shards and replica configuration
+- [x] Create/list/get/delete endpoints
+- [x] Update config endpoint (eviction policy, persistence)
+- [x] Password auth enable/disable flag
+- [x] VPC attachment
+- [x] IAM integration and audit logging
+- [ ] Valkey operator/Helm deployment (async worker)
+- [ ] Persistent volume provisioning on K8s
+- [ ] Redis Exporter → Prometheus integration
+- [ ] LXC container mode for small instances
+
+### 2.4 Object Storage (MinIO)
+
+- [x] Bucket database schema (`buckets` table, globally unique names)
+- [x] S3-compatible bucket name validation (RFC 1123)
+- [x] Access levels: private / public-read / public-read-write
+- [x] Versioning: enabled / suspended / disabled
+- [x] Lifecycle rules with expiration and transition
+- [x] Quota per-bucket configuration
+- [x] CRUD endpoints (`POST/GET/PATCH/DELETE /object-storage/buckets`)
+- [x] Update bucket access/versioning/lifecycle endpoints
+- [x] Access keys (S3 credentials) — create/list/delete
+- [x] Access key scoping (read-only, prefix restriction, expiry)
+- [x] Presigned URL generation (GET/PUT/DELETE, 1m–7d expiry)
+- [x] IAM integration (`storage:*` permissions)
+- [x] Audit logging for bucket and key operations
+- [ ] MinIO cluster provisioning (operator or direct)
+- [ ] Tenant isolation via MinIO policies
+- [ ] Ceph/direct-attached storage backend integration
+- [ ] Per-tenant endpoint routing (`https://<tenant>.storage.cloudify.example.com`)
+
+### 2.5 Services Kubernetes Cluster
+
+- [ ] Services K8s cluster bootstrap (separate from tenant clusters)
+- [ ] Operator installation (CloudNativePG, MongoDB, Valkey)
+- [ ] Namespace-per-tenant provisioning
+- [ ] NetworkPolicy for tenant SDN isolation
+- [ ] ResourceQuota per tenant
+- [ ] PVC provisioning from storage backend
+- [ ] Operator → tenant resource mapping
+
+---
+
+## Phase 2 Summary
+
+| Section                  | Status      | Items  | Done   | Progress |
+| ------------------------ | ----------- | ------ | ------ | -------- |
+| 2.1 Managed PostgreSQL   | Mostly Done | 21     | 16     | 76%      |
+| 2.2 Managed MongoDB      | In Progress | 11     | 8      | 73%      |
+| 2.3 Managed Valkey       | Mostly Done | 15     | 11     | 73%      |
+| 2.4 Object Storage       | Mostly Done | 20     | 16     | 80%      |
+| 2.5 Services K8s Cluster | Not Started | 7      | 0      | 0%       |
+| **Phase 2 Total**        |             | **74** | **51** | **69%**  |
+
+Remaining Phase 2 items require live infrastructure (K8s services cluster, operators,
+MinIO cluster, Ceph storage) and will be completed by async workers consuming NATS
+events from the API gateway provisioning endpoints.
+
+---
+
 _Update this file as tasks are completed. Use `[~]` for in-progress items and `[x]` for done._
